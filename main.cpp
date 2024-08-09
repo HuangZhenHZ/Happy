@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "shader.h"
-#include "deps/stb_image.h"
+#include "image.h"
 
 int window_width = 1920;
 int window_height = 1200;
@@ -21,33 +21,12 @@ struct Vertex {
 };
 
 Vertex vertices[] = {
-  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 0.0},
-  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 1.0},
-  Vertex{.x = -0.5, .y =  0.5, .u = 0.0, .v = 1.0},
-  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 0.0},
-  Vertex{.x =  0.5, .y = -0.5, .u = 1.0, .v = 0.0},
-  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 1.0},
-};
-
-class Image {
-  unsigned char *data_ = nullptr;
-  int width_ = 0, height_ = 0, channels_ = 0;
-public:
-  explicit Image(const char* filename) {
-    data_ = stbi_load(filename, &width_, &height_, &channels_, 0);
-  }
-  ~Image() {
-    stbi_image_free(data_);
-  }
-  Image(const Image& obj) = delete;
-  Image(Image&& obj) = delete;
-  Image& operator= (const Image& obj) = delete;
-  Image& operator= (Image&& obj) = delete;
-
-  const unsigned char *data() const { return data_; }
-  int width() { return width_; }
-  int height() { return height_; }
-  int channels() { return channels_; }
+  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 1.0},
+  Vertex{.x =  0.5, .y = -0.5, .u = 1.0, .v = 1.0},
+  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 0.0},
+  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 0.0},
+  Vertex{.x = -0.5, .y =  0.5, .u = 0.0, .v = 0.0},
+  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 1.0},
 };
 
 int main() {
@@ -107,11 +86,13 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_set_flip_vertically_on_load(true);
+    // stbi_set_flip_vertically_on_load(true);
     Image image("awesomeface.png");
+    Image image2("a.png");
     if (image.data()) {
       printf("width = %d, height = %d\n, channels = %d\n", image.width(), image.height(), image.channels());
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
       glGenerateMipmap(GL_TEXTURE_2D);
       std::cout << "Load texture success" << std::endl;
     } else {
@@ -119,12 +100,23 @@ int main() {
     }
   }
 
+  int frame_cnt = 0;
+  double last_time = 0;
+
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+    frame_cnt++;
+    if (frame_cnt % 1000 == 0) {
+      printf("frame_cnt = %d\n", frame_cnt);
+      double new_time = glfwGetTime();
+      printf("fps = %lf\n", 1000.0 / (new_time - last_time));
+      last_time = new_time;
+    }
   }
 
   glfwTerminate();
