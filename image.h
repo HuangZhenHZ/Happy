@@ -10,7 +10,7 @@ public:
   Image& operator= (Image&& obj) = delete;
 
   const unsigned char *data() const { return data_; }
-  int width() { return width_; }
-  int height() { return height_; }
-  int channels() { return channels_; }
+  int width() const { return width_; }
+  int height() const { return height_; }
+  int channels() const { return channels_; }
 };

@@ -3,6 +3,8 @@
 #include <GLFW/glfw3.h>
 #include "shader.h"
 #include "image.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "deps/stb_truetype.h"
 
 int window_width = 1920;
 int window_height = 1200;
@@ -20,14 +22,48 @@ struct Vertex {
   float r = 1.0, g = 1.0, b = 1.0, a = 1.0;
 };
 
+constexpr float mx = 0.1;
+
 Vertex vertices[] = {
-  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 1.0},
-  Vertex{.x =  0.5, .y = -0.5, .u = 1.0, .v = 1.0},
-  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 0.0},
-  Vertex{.x =  0.5, .y =  0.5, .u = 1.0, .v = 0.0},
+  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = mx},
+  Vertex{.x =  0.5, .y = -0.5, .u = mx, .v = mx},
+  Vertex{.x =  0.5, .y =  0.5, .u = mx, .v = 0.0},
+  Vertex{.x =  0.5, .y =  0.5, .u = mx, .v = 0.0},
   Vertex{.x = -0.5, .y =  0.5, .u = 0.0, .v = 0.0},
-  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = 1.0},
+  Vertex{.x = -0.5, .y = -0.5, .u = 0.0, .v = mx},
 };
+
+void GetFont() {
+  constexpr int texsz = 8192;
+  std::vector<unsigned char> ttf_buffer(20 << 20);
+  std::vector<unsigned char> temp_bitmap(texsz * texsz);
+
+  FILE* file = fopen("SourceHanSansSC-Normal.otf", "rb");
+  int sz = fread(ttf_buffer.data(), 1, 20 << 20, file);
+  printf("sz = %d\n", sz);
+  fclose(file);
+
+  constexpr int cjkstart = 0x4e00;
+  constexpr int cjkend = 0x9FAF;
+
+  stbtt_packedchar packed_chars1[96];
+  stbtt_packedchar packed_chars2[cjkend - cjkstart];
+
+  stbtt_pack_context spc = {};
+  stbtt_PackBegin(&spc, temp_bitmap.data(), texsz, texsz, 0 /* stride */, 1 /* padding */, NULL);
+  stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, 32, 96, packed_chars1);
+  stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, cjkstart, cjkend - cjkstart, packed_chars2);
+  stbtt_PackEnd(&spc);
+
+  GLuint ftex;
+  glGenTextures(1, &ftex);
+  glBindTexture(GL_TEXTURE_2D, ftex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texsz, texsz, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap.data());
+}
 
 int main() {
   if (!glfwInit()) {
@@ -70,13 +106,16 @@ int main() {
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, x));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(2 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, u));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(4 * sizeof(float)));
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, r));
   glEnableVertexAttribArray(2);
 
+  GetFont();
+
+/*
   {
     GLuint texture0;
     glGenTextures(1, &texture0);
@@ -93,12 +132,13 @@ int main() {
       printf("width = %d, height = %d\n, channels = %d\n", image.width(), image.height(), image.channels());
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
       glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
-      glGenerateMipmap(GL_TEXTURE_2D);
+      // glGenerateMipmap(GL_TEXTURE_2D);
       std::cout << "Load texture success" << std::endl;
     } else {
       std::cout << "Failed to load texture" << std::endl;
     }
   }
+  */
 
   int frame_cnt = 0;
   double last_time = 0;
