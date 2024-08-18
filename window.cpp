@@ -1,21 +1,19 @@
-#include <GL/glew.h>
+#include "window.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-namespace {
-int window_width = 0;
-int window_height = 0;
-GLFWwindow* window = nullptr;
+int Window::width_ = 0;
+int Window::height_ = 0;
+GLFWwindow *Window::window_ = nullptr;
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
+void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
   printf("resize %d %d\n", width, height);
-  window_width = width;
-  window_height = height;
+  width_ = width;
+  height_ = height;
   glViewport(0, 0, width, height);
 }
-}  // namespace
 
-bool InitWindow(int width, int height, const char *title) {
+bool Window::InitWindow(int width, int height, const char *title) {
   if (!glfwInit()) {
     std::cout << "Failed to init GLFW" << std::endl;
     return false;
@@ -24,43 +22,35 @@ bool InitWindow(int width, int height, const char *title) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, 4);
-  window = glfwCreateWindow(window_width = width, window_height = height, title, nullptr, nullptr);
-  if (window == nullptr) {
+  window_ = glfwCreateWindow(width_ = width, height_ = height, title, nullptr, nullptr);
+  if (window_ == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
     return false;
   }
-  glfwMakeContextCurrent(window);
+  glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);
-  FramebufferSizeCallback(window, window_width, window_height);
-  glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+  FramebufferSizeCallback(window_, width_, height_);
+  glfwSetFramebufferSizeCallback(window_, FramebufferSizeCallback);
   return true;
 }
 
-void CloseWindow() {
+void Window::CloseWindow() {
   glfwTerminate();
 }
 
-bool WindowShouldClose() {
-  return glfwWindowShouldClose(window);
+bool Window::WindowShouldClose() {
+  return glfwWindowShouldClose(window_);
 }
 
-void SwapScreenBuffer() {
-  glfwSwapBuffers(window);
+void Window::SwapScreenBuffer() {
+  glfwSwapBuffers(window_);
 }
 
-void PollInputEvents() {
+void Window::PollInputEvents() {
   glfwPollEvents();
 }
 
-double GetTime() {
+double Window::GetTime() {
   return glfwGetTime();
-}
-
-double GetWindowWidth() {
-  return window_width;
-}
-
-double GetWindowHeight() {
-  return window_height;
 }

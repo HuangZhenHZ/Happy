@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include <GL/glew.h>
+#include "deps/glad.h"
 #include "window.h"
 #include "shader.h"
 #include "image.h"
@@ -15,13 +15,13 @@ struct Vertex {
 std::vector<Vertex> vertices;
 
 void AddRect(float screen_x1, float screen_y1, float screen_x2, float screen_y2, float tex_x1, float tex_y1, float tex_x2, float tex_y2) {
-  if (GetWindowWidth() == 0 || GetWindowHeight() == 0) {
+  if (Window::width() == 0 || Window::height() == 0) {
     return;
   }
-  screen_x1 = (screen_x1 / GetWindowWidth()) * 2 - 1;
-  screen_x2 = (screen_x2 / GetWindowWidth()) * 2 - 1;
-  screen_y1 = 1 - (screen_y1 / GetWindowHeight()) * 2;
-  screen_y2 = 1 - (screen_y2 / GetWindowHeight()) * 2;
+  screen_x1 = (screen_x1 / Window::width()) * 2 - 1;
+  screen_x2 = (screen_x2 / Window::width()) * 2 - 1;
+  screen_y1 = 1 - (screen_y1 / Window::height()) * 2;
+  screen_y2 = 1 - (screen_y2 / Window::height()) * 2;
   Vertex v0{.x = screen_x1, .y = screen_y1, .u = tex_x1, .v = tex_y1};
   Vertex v1{.x = screen_x2, .y = screen_y1, .u = tex_x2, .v = tex_y1};
   Vertex v2{.x = screen_x2, .y = screen_y2, .u = tex_x2, .v = tex_y2};
@@ -81,12 +81,14 @@ void ProcessFontChar(const stbtt_packedchar& c, double scale) {
 }
 
 int main() {
-  if (!InitWindow(1920, 1080, "MyGame")) {
+  if (!Window::InitWindow(1920, 1080, "MyGame")) {
+    return -1;
+  }
+  if (!gladLoadGL()) {
+    std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
 
-  glewExperimental = GL_TRUE;
-  glewInit();
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_BLEND);
@@ -165,22 +167,22 @@ int main() {
   int frame_cnt = 0;
   double last_time = 0;
 
-  while (!WindowShouldClose()) {
+  while (!Window::WindowShouldClose()) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    SwapScreenBuffer();
-    PollInputEvents();
+    Window::SwapScreenBuffer();
+    Window::PollInputEvents();
 
     frame_cnt++;
-    if (frame_cnt % 1000 == 0) {
+    if (frame_cnt % 100 == 0) {
       printf("frame_cnt = %d\n", frame_cnt);
-      double new_time = GetTime();
+      double new_time = Window::GetTime();
       printf("fps = %lf\n", 1000.0 / (new_time - last_time));
       last_time = new_time;
     }
   }
 
-  CloseWindow();
+  Window::CloseWindow();
   return 0;
 }
