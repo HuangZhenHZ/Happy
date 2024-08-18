@@ -1,78 +1,10 @@
 #include <bits/stdc++.h>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "window.h"
 #include "shader.h"
 #include "image.h"
 #include "deps/stb_truetype.h"
-
-bool DecodeUTF8(const std::string &utf8, std::vector<int> *result) {
-  for (size_t i = 0; i < utf8.size(); ) {
-    uint8_t c = utf8[i];
-    // 1 byte
-    if (c >> 7 == 0) {
-      result->push_back(c);
-      ++i;
-    // 2 bytes
-    } else if (c >> 5 == 6) {
-      if (i + 1 >= utf8.size()) {
-        return false;
-      }
-      uint8_t c1 = utf8[i + 1];
-      if (c1 >> 6 != 2) {
-        return false;
-      }
-      result->push_back((c & 31) << 6 | (c1 & 63));
-      i += 2;
-    // 3 bytes
-    } else if (c >> 4 == 14) {
-      if (i + 2 >= utf8.size()) {
-        return false;
-      }
-      uint8_t c1 = utf8[i + 1];
-      if (c1 >> 6 != 2) {
-        return false;
-      }
-      uint8_t c2 = utf8[i + 2];
-      if (c2 >> 6 != 2) {
-        return false;
-      }
-      result->push_back((c & 15) << 12 | (c1 & 63) << 6 | (c2 & 63));
-      i += 3;
-    // 4 bytes
-    } else if (c >> 3 == 30) {
-      if (i + 3 >= utf8.size()) {
-        return false;
-      }
-      uint8_t c1 = utf8[i + 1];
-      if (c1 >> 6 != 2) {
-        return false;
-      }
-      uint8_t c2 = utf8[i + 2];
-      if (c2 >> 6 != 2) {
-        return false;
-      }
-      uint8_t c3 = utf8[i + 3];
-      if (c3 >> 6 != 2) {
-        return false;
-      }
-      result->push_back((c & 7) << 18 | (c1 & 63) << 12 | (c2 & 63) << 6 | (c3 & 63));
-      i += 4;
-    } else {
-      return false;
-    }
-  }
-  return true;
-}
-
-int window_width = 1920;
-int window_height = 1200;
-
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
-  printf("resize %d %d\n", width, height);
-  window_width = width;
-  window_height = height;
-  glViewport(0, 0, width, height);
-}
+#include "utf8.h"
 
 struct Vertex {
   float x = 0.0, y = 0.0;
@@ -83,13 +15,13 @@ struct Vertex {
 std::vector<Vertex> vertices;
 
 void AddRect(float screen_x1, float screen_y1, float screen_x2, float screen_y2, float tex_x1, float tex_y1, float tex_x2, float tex_y2) {
-  if (window_width == 0 || window_height == 0) {
+  if (GetWindowWidth() == 0 || GetWindowHeight() == 0) {
     return;
   }
-  screen_x1 = (screen_x1 / window_width) * 2 - 1;
-  screen_x2 = (screen_x2 / window_width) * 2 - 1;
-  screen_y1 = 1 - (screen_y1 / window_height) * 2;
-  screen_y2 = 1 - (screen_y2 / window_height) * 2;
+  screen_x1 = (screen_x1 / GetWindowWidth()) * 2 - 1;
+  screen_x2 = (screen_x2 / GetWindowWidth()) * 2 - 1;
+  screen_y1 = 1 - (screen_y1 / GetWindowHeight()) * 2;
+  screen_y2 = 1 - (screen_y2 / GetWindowHeight()) * 2;
   Vertex v0{.x = screen_x1, .y = screen_y1, .u = tex_x1, .v = tex_y1};
   Vertex v1{.x = screen_x2, .y = screen_y1, .u = tex_x2, .v = tex_y1};
   Vertex v2{.x = screen_x2, .y = screen_y2, .u = tex_x2, .v = tex_y2};
@@ -149,24 +81,9 @@ void ProcessFontChar(const stbtt_packedchar& c, double scale) {
 }
 
 int main() {
-  if (!glfwInit()) {
-    std::cout << "Failed to init GLFW" << std::endl;
+  if (!InitWindow(1920, 1080, "MyGame")) {
     return -1;
   }
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_SAMPLES, 4);
-
-  const char title[] = "MyGame";
-  GLFWwindow* window = glfwCreateWindow(window_width, window_height, title, nullptr, nullptr);
-  if (window == nullptr) {
-    std::cout << "Failed to create GLFW window" << std::endl;
-    glfwTerminate();
-    return -1;
-  }
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
 
   glewExperimental = GL_TRUE;
   glewInit();
@@ -175,9 +92,6 @@ int main() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  FramebufferSizeCallback(window, window_width, window_height);
-  glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-
   Shader shader("shader.vs.glsl", "shader.fs.glsl");
   shader.Use();
 
@@ -185,7 +99,7 @@ int main() {
   printf("error: %d\n", glGetError());
 
   std::vector<int> result;
-  bool ok = DecodeUTF8(u8"中文测试The quick brown fox jumps over a lazy dog ij", &result);
+  bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij", &result);
   if (!ok) {
     printf("Decode utf8 failed\n");
     return 0;
@@ -251,22 +165,22 @@ int main() {
   int frame_cnt = 0;
   double last_time = 0;
 
-  while (!glfwWindowShouldClose(window)) {
+  while (!WindowShouldClose()) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+    SwapScreenBuffer();
+    PollInputEvents();
 
     frame_cnt++;
     if (frame_cnt % 1000 == 0) {
       printf("frame_cnt = %d\n", frame_cnt);
-      double new_time = glfwGetTime();
+      double new_time = GetTime();
       printf("fps = %lf\n", 1000.0 / (new_time - last_time));
       last_time = new_time;
     }
   }
 
-  glfwTerminate();
+  CloseWindow();
   return 0;
 }
