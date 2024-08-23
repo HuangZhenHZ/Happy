@@ -55,10 +55,12 @@ void GetFont() {
   stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, cjkstart, cjkend - cjkstart, packed_chars2);
   stbtt_PackEnd(&spc);
 
+/*
   std::vector<uint32_t> rgba32map(texsz * texsz);
   for (int i = 0; i < texsz * texsz; ++i) {
     rgba32map[i] = temp_bitmap[i] << 24 | 0xFFFFFF;
   }
+  */
 
   GLuint ftex;
   glGenTextures(1, &ftex);
@@ -67,8 +69,8 @@ void GetFont() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texsz, texsz, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap.data());
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texsz, texsz, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba32map.data());
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texsz, texsz, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap.data());
+  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texsz, texsz, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba32map.data());
 }
 
 void ProcessFontChar(const stbtt_packedchar& c, double scale) {
@@ -101,7 +103,7 @@ int main() {
   printf("error: %d\n", glGetError());
 
   std::vector<int> result;
-  bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij", &result);
+  bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3", &result);
   if (!ok) {
     printf("Decode utf8 failed\n");
     return 0;
