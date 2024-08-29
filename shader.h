@@ -1,8 +1,10 @@
+#pragma once
+
 #include <string>
 
 class Shader {
 public:
-  Shader(const std::string &vertex_path, const std::string &fragment_path);
+  explicit Shader(const std::string &vertex_path, const std::string &fragment_path);
   void Use() const;
   void setBool(const std::string &name, bool value) const;
   void setInt(const std::string &name, int value) const;

@@ -1,10 +1,18 @@
-#include <bits/stdc++.h>
 #include "deps/glad.h"
 #include "window.h"
 #include "shader.h"
 #include "image.h"
 #include "deps/stb_truetype.h"
 #include "utf8.h"
+#include "texture.h"
+
+#include <iostream>
+#include <cmath>
+#include <memory>
+
+#ifdef _glfw3_h_
+#error Should not include <GLFW/glfw3.h>
+#endif
 
 struct Vertex {
   float x = 0.0, y = 0.0;
@@ -40,7 +48,7 @@ constexpr int cjkend = 0x9FAF;
 stbtt_packedchar packed_chars1[96];
 stbtt_packedchar packed_chars2[cjkend - cjkstart];
 
-void GetFont() {
+Texture GetFont() {
   std::vector<uint8_t> ttf_buffer(20 << 20);
   std::vector<uint8_t> temp_bitmap(texsz * texsz);
 
@@ -62,24 +70,27 @@ void GetFont() {
   }
   */
 
-  GLuint ftex;
-  glGenTextures(1, &ftex);
-  glBindTexture(GL_TEXTURE_2D, ftex);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, texsz, texsz, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap.data());
-  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texsz, texsz, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba32map.data());
+  return Texture(texsz, texsz, GL_RED, temp_bitmap.data());
 }
 
+std::unique_ptr<Texture> GetTextureFromFile(const char* filename) {
+  Image image("awesomeface.png");
+  if (image.data()) {
+    printf("width = %d, height = %d, channels = %d\n", image.width(), image.height(), image.channels());
+    return std::make_unique<Texture>(image.width(), image.height(), GL_RGBA, image.data());
+    // std::cout << "Load texture success" << std::endl;
+  }
+  return nullptr;
+}
+
+double font_x = 100;
+double font_y = 500;
+
 void ProcessFontChar(const stbtt_packedchar& c, double scale) {
-  static double x = 100;
-  static double y = 500;
   // printf("c %f %f %f %f %f\n", c.xoff, c.yoff, c.xoff2, c.yoff2, c.xadvance);
-  AddRect(x + c.xoff * scale, y + c.yoff * scale, x + c.xoff2 * scale, y + c.yoff2 * scale,
+  AddRect(font_x + c.xoff * scale, font_y + c.yoff * scale, font_x + c.xoff2 * scale, font_y + c.yoff2 * scale,
           double(c.x0) / texsz, double(c.y0) / texsz, double(c.x1) / texsz, double(c.y1) / texsz);
-  x += std::ceil(c.xadvance * scale);
+  font_x += std::ceil(c.xadvance * scale);
 }
 
 int main() {
@@ -91,7 +102,7 @@ int main() {
     return -1;
   }
 
-  glEnable(GL_DEPTH_TEST);
+  // glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -99,37 +110,18 @@ int main() {
   Shader shader("shader.vs.glsl", "shader.fs.glsl");
   shader.Use();
 
-  GetFont();
+  std::unique_ptr<Texture> tex = GetTextureFromFile("awesomeface.png");
+  if (tex == nullptr) {
+    printf("Load texture error\n");
+    printf("error: %d\n", glGetError());
+  }
+
+  Texture ftex = GetFont();
   printf("error: %d\n", glGetError());
-
-  std::vector<int> result;
-  bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3", &result);
-  if (!ok) {
-    printf("Decode utf8 failed\n");
-    return 0;
-  }
-  for (const int &code : result) {
-    if (code >= 32 && code < 32 + 96) {
-      ProcessFontChar(packed_chars1[code - 32], 1.0);
-    } else if (code >= cjkstart && code < cjkend) {
-      ProcessFontChar(packed_chars2[code - cjkstart], 1.0);
-    } else {
-      printf("Invalid char\n");
-      return 0;
-    }
-  }
-
-/*
-  printf("vertices.size() = %llu\n", vertices.size());
-  for (const Vertex& vertex : vertices) {
-    printf("%lf %lf %lf %lf\n", vertex.x, vertex.y, vertex.u, vertex.v);
-  }
-  */
 
   GLuint VBO;
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
 
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
@@ -141,38 +133,44 @@ int main() {
   glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, r));
   glEnableVertexAttribArray(2);
 
-/*
-  {
-    GLuint texture0;
-    glGenTextures(1, &texture0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // stbi_set_flip_vertically_on_load(true);
-    Image image("awesomeface.png");
-    Image image2("a.png");
-    if (image.data()) {
-      printf("width = %d, height = %d\n, channels = %d\n", image.width(), image.height(), image.channels());
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width(), image.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
-      // glGenerateMipmap(GL_TEXTURE_2D);
-      std::cout << "Load texture success" << std::endl;
-    } else {
-      std::cout << "Failed to load texture" << std::endl;
-    }
-  }
-  */
-
   int frame_cnt = 0;
   double last_time = 0;
 
   while (!Window::WindowShouldClose()) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    font_x = 100;
+    font_y = 500;
+
+    vertices.clear();
+    ftex.Use();
+    std::vector<int> result;
+    bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3", &result);
+    if (!ok) {
+      printf("Decode utf8 failed\n");
+      return 0;
+    }
+    for (const int &code : result) {
+      if (code >= 32 && code < 32 + 96) {
+        ProcessFontChar(packed_chars1[code - 32], 1.0);
+      } else if (code >= cjkstart && code < cjkend) {
+        ProcessFontChar(packed_chars2[code - cjkstart], 1.0);
+      } else {
+        printf("Invalid char\n");
+        return 0;
+      }
+    }
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+    vertices.clear();
+    tex->Use();
+    double offset = Window::GetTime() * 50;
+    AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
     Window::SwapScreenBuffer();
     Window::PollInputEvents();
 
@@ -180,7 +178,7 @@ int main() {
     if (frame_cnt % 100 == 0) {
       printf("frame_cnt = %d\n", frame_cnt);
       double new_time = Window::GetTime();
-      printf("fps = %lf\n", 1000.0 / (new_time - last_time));
+      printf("fps = %lf\n", 100.0 / (new_time - last_time));
       last_time = new_time;
     }
   }

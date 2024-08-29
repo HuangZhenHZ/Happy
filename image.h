@@ -1,3 +1,5 @@
+#pragma once
+
 class Image {
   unsigned char *data_ = nullptr;
   int width_ = 0, height_ = 0, channels_ = 0;
