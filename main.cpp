@@ -5,6 +5,7 @@
 #include "deps/stb_truetype.h"
 #include "utf8.h"
 #include "texture.h"
+#include "font.h"
 
 #include <iostream>
 #include <cmath>
@@ -42,37 +43,6 @@ void AddRect(float screen_x1, float screen_y1, float screen_x2, float screen_y2,
   vertices.push_back(v0);
 }
 
-constexpr int texsz = 8192;
-constexpr int cjkstart = 0x4e00;
-constexpr int cjkend = 0x9FAF;
-stbtt_packedchar packed_chars1[96];
-stbtt_packedchar packed_chars2[cjkend - cjkstart];
-
-Texture GetFont() {
-  std::vector<uint8_t> ttf_buffer(20 << 20);
-  std::vector<uint8_t> temp_bitmap(texsz * texsz);
-
-  FILE* file = fopen("SourceHanSansSC-Normal.otf", "rb");
-  int sz = fread(ttf_buffer.data(), 1, 20 << 20, file);
-  printf("sz = %d\n", sz);
-  fclose(file);
-
-  stbtt_pack_context spc = {};
-  stbtt_PackBegin(&spc, temp_bitmap.data(), texsz, texsz, 0 /* stride */, 1 /* padding */, NULL);
-  stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, 32, 96, packed_chars1);
-  stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, cjkstart, cjkend - cjkstart, packed_chars2);
-  stbtt_PackEnd(&spc);
-
-/*
-  std::vector<uint32_t> rgba32map(texsz * texsz);
-  for (int i = 0; i < texsz * texsz; ++i) {
-    rgba32map[i] = temp_bitmap[i] << 24 | 0xFFFFFF;
-  }
-  */
-
-  return Texture(texsz, texsz, GL_RED, temp_bitmap.data());
-}
-
 std::unique_ptr<Texture> GetTextureFromFile(const char* filename) {
   Image image("awesomeface.png");
   if (image.data()) {
@@ -81,16 +51,6 @@ std::unique_ptr<Texture> GetTextureFromFile(const char* filename) {
     // std::cout << "Load texture success" << std::endl;
   }
   return nullptr;
-}
-
-double font_x = 100;
-double font_y = 500;
-
-void ProcessFontChar(const stbtt_packedchar& c, double scale) {
-  // printf("c %f %f %f %f %f\n", c.xoff, c.yoff, c.xoff2, c.yoff2, c.xadvance);
-  AddRect(font_x + c.xoff * scale, font_y + c.yoff * scale, font_x + c.xoff2 * scale, font_y + c.yoff2 * scale,
-          double(c.x0) / texsz, double(c.y0) / texsz, double(c.x1) / texsz, double(c.y1) / texsz);
-  font_x += std::ceil(c.xadvance * scale);
 }
 
 int main() {
@@ -116,7 +76,7 @@ int main() {
     printf("error: %d\n", glGetError());
   }
 
-  Texture ftex = GetFont();
+  std::unique_ptr<Font> font = GetFont();
   printf("error: %d\n", glGetError());
 
   GLuint VBO;
@@ -140,33 +100,18 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    font_x = 100;
-    font_y = 500;
+    double offset = Window::GetTime() * 50;
 
-    vertices.clear();
-    ftex.Use();
     std::vector<int> result;
     bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3", &result);
     if (!ok) {
       printf("Decode utf8 failed\n");
       return 0;
     }
-    for (const int &code : result) {
-      if (code >= 32 && code < 32 + 96) {
-        ProcessFontChar(packed_chars1[code - 32], 1.0);
-      } else if (code >= cjkstart && code < cjkend) {
-        ProcessFontChar(packed_chars2[code - cjkstart], 1.0);
-      } else {
-        printf("Invalid char\n");
-        return 0;
-      }
-    }
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    font->Draw(result, 100 + offset, 500);
 
     vertices.clear();
     tex->Use();
-    double offset = Window::GetTime() * 50;
     AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
