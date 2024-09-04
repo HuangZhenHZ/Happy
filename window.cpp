@@ -4,14 +4,20 @@
 
 int Window::width_ = 0;
 int Window::height_ = 0;
-GLFWwindow *Window::window_ = nullptr;
 
-void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
-  printf("resize %d %d\n", width, height);
-  width_ = width;
-  height_ = height;
-  glViewport(0, 0, width, height);
-}
+namespace {
+GLFWwindow *window;
+}  // namespace
+
+class Window::Internal {
+  friend class Window;
+  static void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
+    printf("resize %d %d\n", width, height);
+    Window::width_ = width;
+    Window::height_ = height;
+    glViewport(0, 0, width, height);
+  }
+};
 
 bool Window::InitWindow(int width, int height, const char *title) {
   if (!glfwInit()) {
@@ -22,16 +28,16 @@ bool Window::InitWindow(int width, int height, const char *title) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, 4);
-  window_ = glfwCreateWindow(width_ = width, height_ = height, title, nullptr, nullptr);
-  if (window_ == nullptr) {
+  window = glfwCreateWindow(width_ = width, height_ = height, title, nullptr, nullptr);
+  if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
     return false;
   }
-  glfwMakeContextCurrent(window_);
+  glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
-  FramebufferSizeCallback(window_, width_, height_);
-  glfwSetFramebufferSizeCallback(window_, FramebufferSizeCallback);
+  Internal::FramebufferSizeCallback(window, width_, height_);
+  glfwSetFramebufferSizeCallback(window, Internal::FramebufferSizeCallback);
   return true;
 }
 
@@ -40,11 +46,11 @@ void Window::CloseWindow() {
 }
 
 bool Window::WindowShouldClose() {
-  return glfwWindowShouldClose(window_);
+  return glfwWindowShouldClose(window);
 }
 
 void Window::SwapScreenBuffer() {
-  glfwSwapBuffers(window_);
+  glfwSwapBuffers(window);
 }
 
 void Window::PollInputEvents() {

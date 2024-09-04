@@ -1,10 +1,8 @@
 #pragma once
 
-struct GLFWwindow;
-
 class Window {
   static int width_, height_;
-  static GLFWwindow *window_;
+  class Internal;
 public:
   static int width() { return width_; }
   static int height() { return height_; }
@@ -14,6 +12,4 @@ public:
   static void SwapScreenBuffer();
   static void PollInputEvents();
   static double GetTime();
-private:
-  static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 };
