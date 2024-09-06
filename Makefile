@@ -1,10 +1,12 @@
 CXXFLAGS = -O2 -pipe -Wall
-OBJ = main.o shader.o image.o deps/stb_truetype.o window.o deps/glad.o font.o
+SRCS = main.cpp shader.cpp image.cpp deps/stb_truetype.cpp window.cpp deps/glad.cpp font.cpp
+BUILD_DIR = build/
+OBJS = $(addprefix $(BUILD_DIR), $(SRCS:.cpp=.o))
 
-main.exe: $(OBJ)
-	g++ $(OBJ) -o main.exe -lglfw3 -lopengl32 -lgdi32 -s
+main.exe: $(OBJS)
+	g++ $(OBJS) -o main.exe -lglfw3 -lopengl32 -lgdi32 -s
 
-%.d: %.cpp %.o
-	g++ -MM $< -o $@ -MT $(@:.d=.o) $(CXXFLAGS)
+$(BUILD_DIR)%.d $(BUILD_DIR)%.o : %.cpp
+	g++ -c $< -o $(BUILD_DIR)$(<:.cpp=.o) -MMD -MT $(BUILD_DIR)$(<:.cpp=.o) -MP $(CXXFLAGS)
 
-include $(OBJ:.o=.d)
+include $(OBJS:.o=.d)
