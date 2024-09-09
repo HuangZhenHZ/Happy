@@ -15,7 +15,6 @@ class Window::Internal {
     printf("resize %d %d\n", width, height);
     Window::width_ = width;
     Window::height_ = height;
-    glViewport(0, 0, width, height);
   }
 };
 

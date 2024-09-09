@@ -4,7 +4,7 @@
 #include "image.h"
 #include "deps/stb_truetype.h"
 #include "utf8.h"
-#include "texture.h"
+#include "draw.h"
 #include "font.h"
 
 #include <iostream>
@@ -15,39 +15,11 @@
 #error Should not include <GLFW/glfw3.h>
 #endif
 
-struct Vertex {
-  float x = 0.0, y = 0.0;
-  float u = 0.0, v = 0.0;
-  float r = 1.0, g = 1.0, b = 1.0, a = 1.0;
-};
-
-std::vector<Vertex> vertices;
-
-void AddRect(float screen_x1, float screen_y1, float screen_x2, float screen_y2, float tex_x1, float tex_y1, float tex_x2, float tex_y2) {
-  if (Window::width() == 0 || Window::height() == 0) {
-    return;
-  }
-  screen_x1 = (screen_x1 / Window::width()) * 2 - 1;
-  screen_x2 = (screen_x2 / Window::width()) * 2 - 1;
-  screen_y1 = 1 - (screen_y1 / Window::height()) * 2;
-  screen_y2 = 1 - (screen_y2 / Window::height()) * 2;
-  Vertex v0{.x = screen_x1, .y = screen_y1, .u = tex_x1, .v = tex_y1};
-  Vertex v1{.x = screen_x2, .y = screen_y1, .u = tex_x2, .v = tex_y1};
-  Vertex v2{.x = screen_x2, .y = screen_y2, .u = tex_x2, .v = tex_y2};
-  Vertex v3{.x = screen_x1, .y = screen_y2, .u = tex_x1, .v = tex_y2};
-  vertices.push_back(v0);
-  vertices.push_back(v1);
-  vertices.push_back(v2);
-  vertices.push_back(v2);
-  vertices.push_back(v3);
-  vertices.push_back(v0);
-}
-
 std::unique_ptr<Texture> GetTextureFromFile(const char* filename) {
   Image image("awesomeface.png");
   if (image.data()) {
     printf("width = %d, height = %d, channels = %d\n", image.width(), image.height(), image.channels());
-    return std::make_unique<Texture>(image.width(), image.height(), GL_RGBA, image.data());
+    return std::make_unique<Texture>(image.width(), image.height(), image.channels(), image.data());
     // std::cout << "Load texture success" << std::endl;
   }
   return nullptr;
@@ -86,17 +58,18 @@ int main() {
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, x));
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, x));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, u));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, u));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertex, r));
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, r));
   glEnableVertexAttribArray(2);
 
   int frame_cnt = 0;
   double last_time = 0;
 
   while (!Window::WindowShouldClose()) {
+    ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -110,11 +83,10 @@ int main() {
     }
     font->Draw(result, 100 + offset, 500);
 
-    vertices.clear();
     tex->Use();
-    AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    Vertices vertices;
+    vertices.AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
+    vertices.Draw();
 
     Window::SwapScreenBuffer();
     Window::PollInputEvents();
@@ -128,6 +100,8 @@ int main() {
     }
   }
 
+  tex.reset();
+  font.reset();
   Window::CloseWindow();
   return 0;
 }
