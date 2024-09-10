@@ -1,6 +1,6 @@
 #include "window.h"
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include <cstdio>
 
 int Window::width_ = 0;
 int Window::height_ = 0;
@@ -20,7 +20,7 @@ class Window::Internal {
 
 bool Window::InitWindow(int width, int height, const char *title) {
   if (!glfwInit()) {
-    std::cout << "Failed to init GLFW" << std::endl;
+    puts("Failed to init GLFW");
     return false;
   }
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -29,7 +29,7 @@ bool Window::InitWindow(int width, int height, const char *title) {
   glfwWindowHint(GLFW_SAMPLES, 4);
   window = glfwCreateWindow(width_ = width, height_ = height, title, nullptr, nullptr);
   if (window == nullptr) {
-    std::cout << "Failed to create GLFW window" << std::endl;
+    puts("Failed to create GLFW window");
     glfwTerminate();
     return false;
   }

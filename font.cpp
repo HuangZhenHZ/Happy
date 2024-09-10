@@ -3,6 +3,7 @@
 #include "deps/stb_truetype.h"
 #include "window.h"
 #include "draw.h"
+#include "io.h"
 
 #include <vector>
 #include <cstdio>
@@ -32,18 +33,13 @@ class FontStb : public Font {
   std::unique_ptr<Texture> tex_;
 public:
   explicit FontStb(const char* filename) {
-    std::vector<unsigned char> ttf_buffer(20 << 20);
+    std::vector<unsigned char> ttf_file = ReadFileContents(filename);
     std::vector<unsigned char> temp_bitmap(texsz * texsz);
-
-    FILE* file = fopen(filename, "rb");
-    int sz = fread(ttf_buffer.data(), 1, 20 << 20, file);
-    printf("sz = %d\n", sz);
-    fclose(file);
 
     stbtt_pack_context spc = {};
     stbtt_PackBegin(&spc, temp_bitmap.data(), texsz, texsz, 0 /* stride */, 1 /* padding */, NULL);
-    stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, 32, 96, packed_chars1_);
-    stbtt_PackFontRange(&spc, ttf_buffer.data(), 0, 36.0, cjkstart, cjkend - cjkstart, packed_chars2_);
+    stbtt_PackFontRange(&spc, ttf_file.data(), 0, 36.0, 32, 96, packed_chars1_);
+    stbtt_PackFontRange(&spc, ttf_file.data(), 0, 36.0, cjkstart, cjkend - cjkstart, packed_chars2_);
     stbtt_PackEnd(&spc);
 
   /*
@@ -66,7 +62,7 @@ public:
       } else if (code >= cjkstart && code < cjkend) {
         ProcessFontChar(&vertices, packed_chars2_[code - cjkstart], 1.0);
       } else {
-        printf("Invalid char\n");
+        puts("Invalid char");
         return;
       }
     }
