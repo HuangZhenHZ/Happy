@@ -34,7 +34,7 @@ bool Window::InitWindow(int width, int height, const char *title) {
     return false;
   }
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+  glfwSwapInterval(0);
   Internal::FramebufferSizeCallback(window, width_, height_);
   glfwSetFramebufferSizeCallback(window, Internal::FramebufferSizeCallback);
   return true;

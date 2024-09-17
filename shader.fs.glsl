@@ -15,5 +15,12 @@ void main()
     vec4 c = c0 * 2 - (c1 + c2 + c3 + c4) * 0.25;
     */
     // Out_Color = Frag_Color * c;
+    /*
+    if (gl_FragCoord.x < 400) {
+        Out_Color = vec4(1.0, 0.0, 0.0, 1.0);
+    } else {
+        Out_Color = Frag_Color * texture(Texture, Frag_UV);
+    }
+    */
     Out_Color = Frag_Color * texture(Texture, Frag_UV);
 }

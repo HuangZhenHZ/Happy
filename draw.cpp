@@ -21,6 +21,7 @@ GLenum ChannelsToFormat(int channels) {
   } else if (channels == 4) {
     return GL_RGBA;
   } else {
+    assert(false);
     return 0;
   }
 }
@@ -46,6 +47,11 @@ Texture::~Texture() {
 
 void Texture::Use() const {
   glBindTexture(GL_TEXTURE_2D, tex_);
+}
+
+void Texture::SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels) {
+  glBindTexture(GL_TEXTURE_2D, tex_);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, ChannelsToFormat(channels), GL_UNSIGNED_BYTE, pixels);
 }
 
 // glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());

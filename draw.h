@@ -22,6 +22,7 @@ public:
   Texture& operator= (Texture&& obj) = delete;
 
   void Use() const;
+  void SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels);
 };
 
 class Vertices {
