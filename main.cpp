@@ -66,22 +66,28 @@ int main() {
   glEnableVertexAttribArray(2);
 
   int frame_cnt = 0;
-  double last_time = 0;
+  int last_frame_cnt = 0;
+  double last_time = Window::GetTime();
 
   while (!Window::WindowShouldClose()) {
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClearColor(21.0 / 255, 22.0 / 255, 23.0 / 255, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     double offset = Window::GetTime() * 50;
 
-    std::vector<int> result;
-    bool ok = DecodeUTF8(u8"1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3", &result);
-    if (!ok) {
-      printf("Decode utf8 failed\n");
-      return 0;
+    {
+      std::vector<int> result;
+      bool ok = DecodeUTF8(u8"绝𪩘多生怪柏1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3\n"
+                             "自三峡七百里中，两岸连山，略无阙处。重岩叠嶂，隐天蔽日，自非亭午夜分，不见曦月。\n"
+                             "至于夏水襄陵，沿溯阻绝。或王命急宣，有时朝发白帝，暮到江陵，其间千二百里，虽乘奔御风，不以疾也。", &result);
+      if (!ok) {
+        printf("Decode utf8 failed\n");
+        return 0;
+      }
+      font->Draw(result, 500, 50);
     }
-    font->Draw(result, 100 + offset, 500);
 
     tex->Use();
     Vertices vertices;
@@ -92,11 +98,12 @@ int main() {
     Window::PollInputEvents();
 
     frame_cnt++;
-    if (frame_cnt % 100 == 0) {
+    double new_time = Window::GetTime();
+    if (new_time - last_time > 1.0) {
       printf("frame_cnt = %d\n", frame_cnt);
-      double new_time = Window::GetTime();
-      printf("fps = %lf\n", 100.0 / (new_time - last_time));
+      printf("fps = %lf\n", (frame_cnt - last_frame_cnt) / (new_time - last_time));
       last_time = new_time;
+      last_frame_cnt = frame_cnt;
     }
   }
 

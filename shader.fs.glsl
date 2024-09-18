@@ -23,4 +23,5 @@ void main()
     }
     */
     Out_Color = Frag_Color * texture(Texture, Frag_UV);
+    // Out_Color = Frag_Color * vec4(1.0, 1.0, 1.0, texture(Texture, Frag_UV));
 }
