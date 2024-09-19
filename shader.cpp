@@ -5,6 +5,10 @@
 namespace {
 GLuint GetVertexShader(const char* vertex_path) {
   std::vector<unsigned char> vertex_shader_code = ReadFileContents(vertex_path);
+  if (vertex_shader_code.empty()) {
+    puts("ERROR: Empty vertex shader file");
+    return 0;
+  }
   vertex_shader_code.push_back(0);
   const char*const vertex_code_ptr = reinterpret_cast<char*>(vertex_shader_code.data());
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -23,6 +27,10 @@ GLuint GetVertexShader(const char* vertex_path) {
 
 GLuint GetFragmentShader(const char* fragment_path) {
   std::vector<unsigned char> fragment_shader_code = ReadFileContents(fragment_path);
+  if (fragment_shader_code.empty()) {
+    puts("ERROR: Empty fragment shader file");
+    return 0;
+  }
   fragment_shader_code.push_back(0);
   const char*const fragment_code_ptr = reinterpret_cast<char*>(fragment_shader_code.data());
   GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);

@@ -71,8 +71,8 @@ int main() {
 
   while (!Window::WindowShouldClose()) {
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    // glClearColor(21.0 / 255, 22.0 / 255, 23.0 / 255, 1.0f);
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     double offset = Window::GetTime() * 50;
@@ -89,6 +89,7 @@ int main() {
       font->Draw(result, 500, 50);
     }
 
+    shader.Use();
     tex->Use();
     Vertices vertices;
     vertices.AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);

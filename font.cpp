@@ -4,6 +4,7 @@
 #include "draw.h"
 #include "io.h"
 #include "deps/glad.h"
+#include "shader.h"
 
 #include <vector>
 #include <cmath>
@@ -91,10 +92,12 @@ class FontV2 : public Font {
   std::unique_ptr<Texture> tex_;
   stbtt_fontinfo fontinfo_;
   double scale_;
+  Shader shader_;
 public:
   explicit FontV2(const char *filename)
     : filedata_(ReadFileContents(filename)),
-      tex_(std::make_unique<Texture>(texszv2, texszv2, 1, nullptr)) {
+      tex_(std::make_unique<Texture>(texszv2, texszv2, 1, nullptr)),
+      shader_("shader.vs.glsl", "shader.font.fs.glsl") {
     stbtt_InitFont(&fontinfo_, filedata_.data(), 0);
     scale_ = stbtt_ScaleForPixelHeight(&fontinfo_, 36.0);
   }
@@ -133,6 +136,7 @@ public:
       font_x += advance * scale;
     }
     vertices.AddRect(0, 0, 256, 256, 0, 0, 1, 1);
+    shader_.Use();
     tex_->Use();
     vertices.Draw();
   }
@@ -207,7 +211,5 @@ private:
 };
 
 std::unique_ptr<Font> GetFont() {
-  return std::make_unique<FontV2>("SourceHanSansSC-Normal.otf");
-  // return std::make_unique<FontV2>("unifont-16.0.01.otf");
-  // return std::make_unique<FontV2>("wqy-microhei.ttc");
+  return std::make_unique<FontV2>("NotoSansSC-Regular.otf");
 }
