@@ -15,14 +15,13 @@
 #error Should not include <GLFW/glfw3.h>
 #endif
 
-std::unique_ptr<Texture> GetTextureFromFile(const char* filename) {
+UniqueTexture GetTextureFromFile(const char* filename) {
   Image image("awesomeface.png");
   if (image.data()) {
     printf("width = %d, height = %d, channels = %d\n", image.width(), image.height(), image.channels());
-    return std::make_unique<Texture>(image.width(), image.height(), image.channels(), image.data());
-    // std::cout << "Load texture success" << std::endl;
+    return UniqueTexture(image.width(), image.height(), image.channels(), image.data());
   }
-  return nullptr;
+  return UniqueTexture{};
 }
 
 int main() {
@@ -42,8 +41,9 @@ int main() {
   Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
   shader.Use();
 
-  std::unique_ptr<Texture> tex = GetTextureFromFile("awesomeface.png");
-  if (tex == nullptr) {
+  UniqueTexture tex = GetTextureFromFile("awesomeface.png");
+  tex = std::move(tex);
+  if (!tex->NotNull()) {
     printf("Load texture error\n");
     printf("error: %d\n", glGetError());
   }
@@ -108,7 +108,7 @@ int main() {
     }
   }
 
-  tex.reset();
+  tex.Reset();
   font.reset();
   Window::CloseWindow();
   return 0;

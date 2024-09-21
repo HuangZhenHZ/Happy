@@ -31,7 +31,7 @@ void ProcessFontChar(Vertices* vertices, const stbtt_packedchar& c, double scale
 class FontStb : public Font {
   stbtt_packedchar packed_chars1_[96];
   stbtt_packedchar packed_chars2_[cjkend - cjkstart];
-  std::unique_ptr<Texture> tex_;
+  UniqueTexture tex_;
 public:
   explicit FontStb(const char* filename) {
     std::vector<unsigned char> ttf_file = ReadFileContents(filename);
@@ -52,7 +52,7 @@ public:
     //   rgba32map[i << 2 | 3] = temp_bitmap[i];
     // }
 
-    tex_ = std::make_unique<Texture>(texsz, texsz, 1, temp_bitmap.data());
+    tex_ = UniqueTexture(texsz, texsz, 1, temp_bitmap.data());
     // tex_ = std::make_unique<Texture>(texsz, texsz, 4, rgba32map.data());
   }
 
@@ -89,14 +89,14 @@ public:
 class FontV2 : public Font {
   static constexpr int texszv2 = 1024;
   std::vector<unsigned char> filedata_;
-  std::unique_ptr<Texture> tex_;
+  UniqueTexture tex_;
   stbtt_fontinfo fontinfo_;
   double scale_;
   Shader shader_;
 public:
   explicit FontV2(const char *filename)
     : filedata_(ReadFileContents(filename)),
-      tex_(std::make_unique<Texture>(texszv2, texszv2, 1, nullptr)),
+      tex_(UniqueTexture(texszv2, texszv2, 1, nullptr)),
       shader_(ShaderManager::GetShader("shader.vs.glsl", "shader.font.fs.glsl")) {
     stbtt_InitFont(&fontinfo_, filedata_.data(), 0);
     scale_ = stbtt_ScaleForPixelHeight(&fontinfo_, 36.0);

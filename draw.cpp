@@ -27,11 +27,11 @@ GLenum ChannelsToFormat(int channels) {
 }
 };
 
-Texture::Texture(int width, int height, int channels, const unsigned char *pixels) {
+UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned char *pixels) {
   GLenum format = ChannelsToFormat(channels);
   assert(format);
-  glGenTextures(1, &tex_);
-  glBindTexture(GL_TEXTURE_2D, tex_);
+  glGenTextures(1, &tex_.id_);
+  glBindTexture(GL_TEXTURE_2D, tex_.id_);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -40,17 +40,23 @@ Texture::Texture(int width, int height, int channels, const unsigned char *pixel
   glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-Texture::~Texture() {
-  assert(glIsTexture(tex_));
-  glDeleteTextures(1, &tex_);
+UniqueTexture::~UniqueTexture() {
+  assert(tex_.id_ == 0 || glIsTexture(tex_.id_));
+  glDeleteTextures(1, &tex_.id_);
+}
+
+void UniqueTexture::Reset() {
+  assert(tex_.id_ == 0 || glIsTexture(tex_.id_));
+  glDeleteTextures(1, &tex_.id_);
+  tex_.id_ = 0;
 }
 
 void Texture::Use() const {
-  glBindTexture(GL_TEXTURE_2D, tex_);
+  glBindTexture(GL_TEXTURE_2D, id_);
 }
 
 void Texture::SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels) {
-  glBindTexture(GL_TEXTURE_2D, tex_);
+  glBindTexture(GL_TEXTURE_2D, id_);
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, ChannelsToFormat(channels), GL_UNSIGNED_BYTE, pixels);
 }
 

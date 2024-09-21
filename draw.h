@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdio>
+#include <utility>
 #include <vector>
 
 class ViewPort {
@@ -12,17 +14,38 @@ private:
 };
 
 class Texture {
-  unsigned int tex_ = 0;
+  unsigned int id_ = 0;
+  friend class UniqueTexture;
 public:
-  explicit Texture(int width, int height, int channels, const unsigned char *pixels);
-  ~Texture();
-  Texture(const Texture& obj) = delete;
-  Texture(Texture&& obj) = delete;
-  Texture& operator= (const Texture& obj) = delete;
-  Texture& operator= (Texture&& obj) = delete;
-
+  bool NotNull() const {
+    return id_;
+  }
   void Use() const;
   void SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels);
+};
+
+class UniqueTexture {
+  Texture tex_;
+public:
+  UniqueTexture() = default;
+  explicit UniqueTexture(int width, int height, int channels, const unsigned char *pixels);
+  const Texture& tex() const {
+    return tex_;
+  }
+  Texture* operator->() {
+    return &tex_;
+  }
+  ~UniqueTexture();
+  UniqueTexture(const UniqueTexture& obj) = delete;
+  UniqueTexture(UniqueTexture&& obj) {
+    tex_.id_ = std::exchange(obj.tex_.id_, 0);
+  }
+  UniqueTexture& operator= (const UniqueTexture& obj) = delete;
+  UniqueTexture& operator= (UniqueTexture&& obj) {
+    tex_.id_ = std::exchange(obj.tex_.id_, 0);
+    return *this;
+  }
+  void Reset();
 };
 
 class Vertices {
