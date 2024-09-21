@@ -39,7 +39,7 @@ int main() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  Shader shader("shader.vs.glsl", "shader.fs.glsl");
+  Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
   shader.Use();
 
   std::unique_ptr<Texture> tex = GetTextureFromFile("awesomeface.png");

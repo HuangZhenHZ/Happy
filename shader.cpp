@@ -3,54 +3,33 @@
 #include "io.h"
 
 namespace {
-GLuint GetVertexShader(const char* vertex_path) {
-  std::vector<unsigned char> vertex_shader_code = ReadFileContents(vertex_path);
-  if (vertex_shader_code.empty()) {
-    puts("ERROR: Empty vertex shader file");
+template <GLenum shader_type>
+GLuint GetShader(const char* filename) {
+  std::vector<unsigned char> code = ReadFileContents(filename);
+  if (code.empty()) {
+    puts("ERROR: Empty shader file");
     return 0;
   }
-  vertex_shader_code.push_back(0);
-  const char*const vertex_code_ptr = reinterpret_cast<char*>(vertex_shader_code.data());
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_code_ptr, nullptr);
-  glCompileShader(vertex_shader);
+  code.push_back(0);
+  const char*const code_ptr = reinterpret_cast<char*>(code.data());
+  GLuint shader = glCreateShader(shader_type);
+  glShaderSource(shader, 1, &code_ptr, nullptr);
+  glCompileShader(shader);
   int success;
-  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
   if (!success) {
     char info_log[512];
-    glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-    puts("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
+    glGetShaderInfoLog(shader, 512, NULL, info_log);
+    puts("ERROR: Shader compile error");
     puts(info_log);
   }
-  return vertex_shader;
-}
-
-GLuint GetFragmentShader(const char* fragment_path) {
-  std::vector<unsigned char> fragment_shader_code = ReadFileContents(fragment_path);
-  if (fragment_shader_code.empty()) {
-    puts("ERROR: Empty fragment shader file");
-    return 0;
-  }
-  fragment_shader_code.push_back(0);
-  const char*const fragment_code_ptr = reinterpret_cast<char*>(fragment_shader_code.data());
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_code_ptr, nullptr);
-  glCompileShader(fragment_shader);
-  int success;
-  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    char info_log[512];
-    glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-    puts("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
-    puts(info_log);
-  }
-  return fragment_shader;
+  return shader;
 }
 }  // namespace
 
 Shader::Shader(const char* vertex_path, const char* fragment_path) {
-  GLuint vertex_shader = GetVertexShader(vertex_path);
-  GLuint fragment_shader = GetFragmentShader(fragment_path);
+  GLuint vertex_shader = GetShader<GL_VERTEX_SHADER>(vertex_path);
+  GLuint fragment_shader = GetShader<GL_FRAGMENT_SHADER>(fragment_path);
   program_ = glCreateProgram();
   glAttachShader(program_, vertex_shader);
   glAttachShader(program_, fragment_shader);
@@ -60,7 +39,7 @@ Shader::Shader(const char* vertex_path, const char* fragment_path) {
   if(!success) {
     char info_log[512];
     glGetProgramInfoLog(program_, 512, NULL, info_log);
-    puts("Link failed");
+    puts("ERROR: Link failed");
     puts(info_log);
   }
   glDeleteShader(vertex_shader);

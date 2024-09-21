@@ -97,7 +97,7 @@ public:
   explicit FontV2(const char *filename)
     : filedata_(ReadFileContents(filename)),
       tex_(std::make_unique<Texture>(texszv2, texszv2, 1, nullptr)),
-      shader_("shader.vs.glsl", "shader.font.fs.glsl") {
+      shader_(ShaderManager::GetShader("shader.vs.glsl", "shader.font.fs.glsl")) {
     stbtt_InitFont(&fontinfo_, filedata_.data(), 0);
     scale_ = stbtt_ScaleForPixelHeight(&fontinfo_, 36.0);
   }

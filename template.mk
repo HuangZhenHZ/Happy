@@ -15,6 +15,6 @@ else
 endif
 
 $(BUILD_DIR)%.d $(BUILD_DIR)%.o : %.cpp | $(DIRS)
-	g++ -c $< -o $(BUILD_DIR)$(<:.cpp=.o) -MMD -MT $(BUILD_DIR)$(<:.cpp=.o) -MP $(CXXFLAGS)
+	g++ $(CXXFLAGS) -MMD -MP -c $< -o $(BUILD_DIR)$(<:.cpp=.o)
 
 include $(OBJS:.o=.d)
