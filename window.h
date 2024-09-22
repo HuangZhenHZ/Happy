@@ -12,4 +12,9 @@ public:
   static void SwapScreenBuffer();
   static void PollInputEvents();
   static double GetTime();
+  static void DisableCursor();
+  static int GetKey(int key);
+
+  struct CursorPos { double x = 0, y = 0; };
+  static CursorPos GetCursorPos();
 };

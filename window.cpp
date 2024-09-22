@@ -59,3 +59,17 @@ void Window::PollInputEvents() {
 double Window::GetTime() {
   return glfwGetTime();
 }
+
+Window::CursorPos Window::GetCursorPos() {
+  CursorPos result;
+  glfwGetCursorPos(window, &result.x, &result.y);
+  return result;
+}
+
+void Window::DisableCursor() {
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+int Window::GetKey(int key) {
+  return glfwGetKey(window, key);
+}

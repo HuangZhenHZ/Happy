@@ -7,6 +7,7 @@
 #include "draw.h"
 #include "font.h"
 
+#include <algorithm>
 #include <iostream>
 #include <cmath>
 #include <memory>
@@ -15,9 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#ifdef _glfw3_h_
-#error Should not include <GLFW/glfw3.h>
-#endif
+#include <GLFW/glfw3.h>
 
 float box_vertices[] = {
   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -110,9 +109,9 @@ int main() {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  // Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
-  Shader shader = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
-  shader.Use();
+  Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
+  Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
+  shader3d.Use();
 
   UniqueTexture tex = GetTextureFromFile("awesomeface.png");
   if (!tex->NotNull()) {
@@ -131,18 +130,52 @@ int main() {
 
   int frame_cnt = 0;
   int last_frame_cnt = 0;
-  double last_time = Window::GetTime();
+  double fps_last_time = Window::GetTime();
+  double last_cursor_x = 0;
+  double last_cursor_y = 0;
+  {
+    Window::CursorPos cursor_pos = Window::GetCursorPos();
+    last_cursor_x = cursor_pos.x;
+    last_cursor_y = cursor_pos.y;
+  }
+  double camera_pitch = 0.0;
+  double camera_yaw = 0.0;
+  glm::vec3 camera_pos(0.0, 0.0, -3.0);
+  double fov = 45.0;
+  Window::DisableCursor();
+  double event_last_time = 0;
 
   while (!Window::WindowShouldClose()) {
+    glEnable(GL_DEPTH_TEST);
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    double camera_pitch = 0.0;
-    double camera_yaw = 0.0;
-    glm::vec3 camera_pos(0.0, 0.0, -3.0);
-    double fov = 45.0;
+    double new_time = Window::GetTime();
+    float delta_time = new_time - event_last_time;
+    event_last_time = new_time;
+    constexpr float kCameraSpeed = 1.0;
+    if (Window::GetKey(GLFW_KEY_W) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * glm::vec3(std::sin(camera_yaw), 0.0, std::cos(camera_yaw));
+    }
+    if (Window::GetKey(GLFW_KEY_S) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * glm::vec3(-std::sin(camera_yaw), 0.0, -std::cos(camera_yaw));
+    }
+    if (Window::GetKey(GLFW_KEY_A) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * glm::vec3(std::cos(camera_yaw), 0.0, -std::sin(camera_yaw));
+    }
+    if (Window::GetKey(GLFW_KEY_D) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * glm::vec3(-std::cos(camera_yaw), 0.0, std::sin(camera_yaw));
+    }
+
+    Window::CursorPos cursor_pos = Window::GetCursorPos();
+    constexpr double kSensitivity = 0.002;
+    camera_yaw -= (cursor_pos.x - last_cursor_x) * kSensitivity;
+    camera_pitch -= (cursor_pos.y - last_cursor_y) * kSensitivity;
+    camera_pitch = std::clamp(camera_pitch, -M_PI * 0.99, M_PI * 0.99);
+    last_cursor_x = cursor_pos.x;
+    last_cursor_y = cursor_pos.y;
 
     glm::mat4 model(1.0f);
     glm::vec3 camera_dir(std::cos(camera_pitch) * std::sin(camera_yaw),
@@ -153,15 +186,17 @@ int main() {
     glm::mat4 projection(1.0f);
     projection = glm::perspective((float)glm::radians(fov), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
 
-    shader.Use();
-    shader.setMat4f("transform", glm::value_ptr(projection * view * model));
+    shader3d.Use();
+    shader3d.setMat4f("transform", glm::value_ptr(projection * view * model));
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBindVertexArray(VAO);
     container_tex->Use();
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    // double offset = Window::GetTime() * 50;
+    glDisable(GL_DEPTH_TEST);
+
+    double offset = new_time * 50;
 
     {
       std::vector<int> result;
@@ -175,21 +210,20 @@ int main() {
       font->Draw(result, 500, 50);
     }
 
-    // shader.Use();
-    // tex->Use();
-    // Vertices vertices;
-    // vertices.AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
-    // vertices.Draw();
+    shader.Use();
+    tex->Use();
+    Vertices vertices;
+    vertices.AddRect(offset, 0, 300 + offset, 300, 0, 0, 1, 1);
+    vertices.Draw();
 
     Window::SwapScreenBuffer();
     Window::PollInputEvents();
 
     frame_cnt++;
-    double new_time = Window::GetTime();
-    if (new_time - last_time > 1.0) {
+    if (new_time - fps_last_time > 1.0) {
       printf("frame_cnt = %d\n", frame_cnt);
-      printf("fps = %lf\n", (frame_cnt - last_frame_cnt) / (new_time - last_time));
-      last_time = new_time;
+      printf("fps = %lf\n", (frame_cnt - last_frame_cnt) / (new_time - fps_last_time));
+      fps_last_time = new_time;
       last_frame_cnt = frame_cnt;
     }
   }
