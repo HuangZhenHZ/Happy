@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+void InitVAOVBO();
+
 class ViewPort {
 public:
   struct Size { int width = 0, height = 0; };

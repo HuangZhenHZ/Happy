@@ -11,12 +11,69 @@
 #include <cmath>
 #include <memory>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #ifdef _glfw3_h_
 #error Should not include <GLFW/glfw3.h>
 #endif
 
+float box_vertices[] = {
+  -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+  0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+  -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+  -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+  -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+  -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+  -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+  /*
+  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+  */
+
+  -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
+  5.0f, -0.5f, -5.0f,  1.0f, 1.0f,
+  5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
+  5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
+  -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+  -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
+
+  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+  -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
 UniqueTexture GetTextureFromFile(const char* filename) {
-  Image image("awesomeface.png");
+  Image image(filename);
   if (image.data()) {
     printf("width = %d, height = %d, channels = %d\n", image.width(), image.height(), image.channels());
     return UniqueTexture(image.width(), image.height(), image.channels(), image.data());
@@ -33,37 +90,44 @@ int main() {
     return -1;
   }
 
-  // glEnable(GL_DEPTH_TEST);
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
+  InitVAOVBO();
+
+  GLuint VBO;
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(box_vertices), box_vertices, GL_STATIC_DRAW);
+
+  GLuint VAO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  // Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
+  Shader shader = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
   shader.Use();
 
   UniqueTexture tex = GetTextureFromFile("awesomeface.png");
-  tex = std::move(tex);
   if (!tex->NotNull()) {
+    printf("Load texture error\n");
+    printf("error: %d\n", glGetError());
+  }
+
+  UniqueTexture container_tex = GetTextureFromFile("container.jpg");
+  if (!container_tex->NotNull()) {
     printf("Load texture error\n");
     printf("error: %d\n", glGetError());
   }
 
   std::unique_ptr<Font> font = GetFont();
   printf("error: %d\n", glGetError());
-
-  GLuint VBO;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-  GLuint VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, x));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, u));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, r));
-  glEnableVertexAttribArray(2);
 
   int frame_cnt = 0;
   int last_frame_cnt = 0;
@@ -75,7 +139,29 @@ int main() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    double offset = Window::GetTime() * 50;
+    double camera_pitch = 0.0;
+    double camera_yaw = 0.0;
+    glm::vec3 camera_pos(0.0, 0.0, -3.0);
+    double fov = 45.0;
+
+    glm::mat4 model(1.0f);
+    glm::vec3 camera_dir(std::cos(camera_pitch) * std::sin(camera_yaw),
+                         std::sin(camera_pitch),
+                         std::cos(camera_pitch) * std::cos(camera_yaw));
+    glm::mat4 view = glm::lookAt(camera_pos, camera_pos + camera_dir, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 projection(1.0f);
+    projection = glm::perspective((float)glm::radians(fov), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
+
+    shader.Use();
+    shader.setMat4f("transform", glm::value_ptr(projection * view * model));
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArray(VAO);
+    container_tex->Use();
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    // double offset = Window::GetTime() * 50;
 
     {
       std::vector<int> result;
@@ -89,11 +175,11 @@ int main() {
       font->Draw(result, 500, 50);
     }
 
-    shader.Use();
-    tex->Use();
-    Vertices vertices;
-    vertices.AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
-    vertices.Draw();
+    // shader.Use();
+    // tex->Use();
+    // Vertices vertices;
+    // vertices.AddRect(offset, offset, 300 + offset, 300 + offset, 0, 0, 1, 1);
+    // vertices.Draw();
 
     Window::SwapScreenBuffer();
     Window::PollInputEvents();
@@ -109,6 +195,7 @@ int main() {
   }
 
   tex.Reset();
+  container_tex.Reset();
   font.reset();
   Window::CloseWindow();
   return 0;

@@ -98,7 +98,7 @@ public:
     : filedata_(ReadFileContents(filename)),
       tex_(UniqueTexture(texszv2, texszv2, 1, nullptr)),
       shader_(ShaderManager::GetShader("shader.vs.glsl", "shader.font.fs.glsl")) {
-    stbtt_InitFont(&fontinfo_, filedata_.data(), 0);
+    stbtt_InitFont(&fontinfo_, filedata_.data(), stbtt_GetFontOffsetForIndex(filedata_.data(), 0));
     scale_ = stbtt_ScaleForPixelHeight(&fontinfo_, 36.0);
   }
 
@@ -211,5 +211,6 @@ private:
 };
 
 std::unique_ptr<Font> GetFont() {
+  // return std::make_unique<FontV2>("c:/windows/Fonts/msyh.ttc");
   return std::make_unique<FontV2>("NotoSansSC-Regular.otf");
 }

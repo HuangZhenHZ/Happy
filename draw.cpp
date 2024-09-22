@@ -27,6 +27,25 @@ GLenum ChannelsToFormat(int channels) {
 }
 };
 
+namespace {
+GLuint VAO1;
+GLuint VBO1;
+}  // namespace
+
+void InitVAOVBO() {
+  glGenBuffers(1, &VBO1);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+
+  glGenVertexArrays(1, &VAO1);
+  glBindVertexArray(VAO1);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, x));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, u));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, r));
+  glEnableVertexAttribArray(2);
+}
+
 UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned char *pixels) {
   GLenum format = ChannelsToFormat(channels);
   assert(format);
@@ -63,6 +82,8 @@ void Texture::SubImage(int x, int y, int width, int height, int channels, const 
 // glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
 
 void Vertices::Draw() const {
+  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+  glBindVertexArray(VAO1);
   glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
   glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
 }
