@@ -46,12 +46,12 @@ void InitVAOVBO() {
   glEnableVertexAttribArray(2);
 }
 
-UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned char *pixels) {
+Texture::Texture(int width, int height, int channels, const unsigned char *pixels) {
   GLenum format = ChannelsToFormat(channels);
   assert(format);
-  glGenTextures(1, &tex_.id_);
-  printf("gen texture %d\n", tex_.id_);
-  glBindTexture(GL_TEXTURE_2D, tex_.id_);
+  glGenTextures(1, &id_);
+  printf("gen texture %d\n", id_);
+  glBindTexture(GL_TEXTURE_2D, id_);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -60,11 +60,11 @@ UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned
   glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-void UniqueTexture::Reset() {
-  printf("delete texture %d\n", tex_.id_);
-  assert(tex_.id_ == 0 || glIsTexture(tex_.id_));
-  glDeleteTextures(1, &tex_.id_);
-  tex_.id_ = 0;
+void Texture::Delete() {
+  printf("delete texture %d\n", id_);
+  assert(id_ == 0 || glIsTexture(id_));
+  glDeleteTextures(1, &id_);
+  id_ = 0;
 }
 
 void Texture::Use() const {

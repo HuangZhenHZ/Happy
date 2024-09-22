@@ -14,10 +14,46 @@ private:
   static Size size_;
 };
 
+template <class Obj>
+class UniqueObj {
+  Obj obj_;
+public:
+  template<typename... _Args>
+  explicit UniqueObj(_Args&&... __args) : obj_(std::forward<_Args>(__args)...) {}
+  ~UniqueObj() {
+    obj_.Delete();
+  }
+  const Obj& Get() const {
+    return obj_;
+  }
+  Obj* operator->() {
+    return &obj_;
+  }
+  UniqueObj(const UniqueObj& u) = delete;
+  UniqueObj(UniqueObj&& u) {
+    obj_ = u.obj_;
+    u.obj_ = Obj{};
+  }
+  UniqueObj& operator= (const UniqueObj& u) = delete;
+  UniqueObj& operator= (UniqueObj&& u) {
+    Obj temp = u.obj_;
+    u.obj_ = Obj{};
+    obj_.Delete();
+    obj_ = temp;
+    return *this;
+  }
+  void Reset() {
+    obj_.Delete();
+  }
+};
+
 class Texture {
   unsigned int id_ = 0;
-  friend class UniqueTexture;
+  explicit Texture(int width, int height, int channels, const unsigned char *pixels);
+  void Delete();
+  friend class UniqueObj<Texture>;
 public:
+  Texture() = default;
   bool NotNull() const {
     return id_;
   }
@@ -25,35 +61,7 @@ public:
   void SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels);
 };
 
-class UniqueTexture {
-  Texture tex_;
-public:
-  UniqueTexture() = default;
-  explicit UniqueTexture(int width, int height, int channels, const unsigned char *pixels);
-  const Texture& tex() const {
-    return tex_;
-  }
-  Texture* operator->() {
-    return &tex_;
-  }
-  ~UniqueTexture() {
-    Reset();
-  }
-  UniqueTexture(const UniqueTexture& obj) = delete;
-  UniqueTexture(UniqueTexture&& obj) {
-    tex_ = obj.tex_;
-    obj.tex_ = Texture{};
-  }
-  UniqueTexture& operator= (const UniqueTexture& obj) = delete;
-  UniqueTexture& operator= (UniqueTexture&& obj) {
-    Texture temp = obj.tex_;
-    obj.tex_ = Texture{};
-    Reset();
-    tex_ = temp;
-    return *this;
-  }
-  void Reset();
-};
+using UniqueTexture = UniqueObj<Texture>;
 
 class Vertices {
 public:
