@@ -50,6 +50,7 @@ UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned
   GLenum format = ChannelsToFormat(channels);
   assert(format);
   glGenTextures(1, &tex_.id_);
+  printf("gen texture %d\n", tex_.id_);
   glBindTexture(GL_TEXTURE_2D, tex_.id_);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -59,12 +60,8 @@ UniqueTexture::UniqueTexture(int width, int height, int channels, const unsigned
   glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-UniqueTexture::~UniqueTexture() {
-  assert(tex_.id_ == 0 || glIsTexture(tex_.id_));
-  glDeleteTextures(1, &tex_.id_);
-}
-
 void UniqueTexture::Reset() {
+  printf("delete texture %d\n", tex_.id_);
   assert(tex_.id_ == 0 || glIsTexture(tex_.id_));
   glDeleteTextures(1, &tex_.id_);
   tex_.id_ = 0;

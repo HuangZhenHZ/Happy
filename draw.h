@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdio>
-#include <utility>
 #include <vector>
 
 void InitVAOVBO();
@@ -37,14 +36,20 @@ public:
   Texture* operator->() {
     return &tex_;
   }
-  ~UniqueTexture();
+  ~UniqueTexture() {
+    Reset();
+  }
   UniqueTexture(const UniqueTexture& obj) = delete;
   UniqueTexture(UniqueTexture&& obj) {
-    tex_.id_ = std::exchange(obj.tex_.id_, 0);
+    tex_ = obj.tex_;
+    obj.tex_ = Texture{};
   }
   UniqueTexture& operator= (const UniqueTexture& obj) = delete;
   UniqueTexture& operator= (UniqueTexture&& obj) {
-    tex_.id_ = std::exchange(obj.tex_.id_, 0);
+    Texture temp = obj.tex_;
+    obj.tex_ = Texture{};
+    Reset();
+    tex_ = temp;
     return *this;
   }
   void Reset();

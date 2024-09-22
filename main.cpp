@@ -6,6 +6,7 @@
 #include "utf8.h"
 #include "draw.h"
 #include "font.h"
+#include "vec.h"
 
 #include <algorithm>
 #include <iostream>
@@ -71,6 +72,33 @@ float box_vertices[] = {
   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
+struct UV {
+  float u = 0.0, v = 0.0;
+};
+
+struct Vertex3d {
+  Vec3f pos;
+  UV uv;
+};
+
+std::vector<Vertex3d> vertices3d;
+
+void AddRect3d(const Vertex3d& v0, const Vertex3d& v1, const Vertex3d& v2, const Vertex3d& v3) {
+  vertices3d.push_back(v0);
+  vertices3d.push_back(v1);
+  vertices3d.push_back(v2);
+  vertices3d.push_back(v2);
+  vertices3d.push_back(v3);
+  vertices3d.push_back(v0);
+}
+
+void AddBox() {
+  AddRect3d(Vertex3d{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
+            Vertex3d{{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
+            Vertex3d{{ 0.5f,  0.5f, -0.5f}, {1.0f, 1.0f}},
+            Vertex3d{{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f}});
+}
+
 UniqueTexture GetTextureFromFile(const char* filename) {
   Image image(filename);
   if (image.data()) {
@@ -96,10 +124,12 @@ int main() {
 
   InitVAOVBO();
 
+  AddBox();
+
   GLuint VBO;
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(box_vertices), box_vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices3d.size() * sizeof(Vertex3d), vertices3d.data(), GL_STATIC_DRAW);
 
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
@@ -202,7 +232,9 @@ int main() {
       std::vector<int> result;
       bool ok = DecodeUTF8(u8"绝𪩘多生怪柏1234567890中文测试The quick brown fox jumps over a lazy dog ij (1 + 2) * 3\n"
                              "自三峡七百里中，两岸连山，略无阙处。重岩叠嶂，隐天蔽日，自非亭午夜分，不见曦月。\n"
-                             "至于夏水襄陵，沿溯阻绝。或王命急宣，有时朝发白帝，暮到江陵，其间千二百里，虽乘奔御风，不以疾也。", &result);
+                             "至于夏水襄陵，沿溯阻绝。或王命急宣，有时朝发白帝，暮到江陵，其间千二百里，虽乘奔御风，不以疾也。\n"
+                             "满招损，谦受益。\n"
+                             "天地本不全，经文残缺也应不全之理，非人力所能为也。", &result);
       if (!ok) {
         printf("Decode utf8 failed\n");
         return 0;
