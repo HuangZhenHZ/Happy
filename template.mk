@@ -5,7 +5,7 @@ DIRS_WITH_SLASH = $(sort $(dir $(OBJS)))
 DIRS = $(DIRS_WITH_SLASH:/=)
 
 $(TARGET).exe: $(OBJS)
-	g++ $(OBJS) -o $(TARGET).exe -lglfw3 -lopengl32 -lgdi32 -s
+	g++ $(OBJS) -o $(TARGET).exe $(LDFLAGS) -s
 
 $(DIRS):
 ifeq ($(OS),Windows_NT)

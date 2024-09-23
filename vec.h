@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <cassert>
 
 template <class T>
 struct Vec3 {
@@ -17,17 +16,70 @@ struct Vec3 {
   }
   void Normalize() {
     const T inv = 1.0 / Length();
-    assert(std::isfinite(inv));
     x *= inv;
     y *= inv;
     z *= inv;
   }
   Vec3 Normalized() const {
     const T inv = 1.0 / Length();
-    assert(std::isfinite(inv));
     return Vec3(x * inv, y * inv, z * inv);
+  }
+  T InnerProd(const Vec3& v) {
+    return x * v.x + y * v.y + z * v.z;
+  }
+  Vec3 CrossProd(const Vec3& v) {
+    return Vec3(y * v.z - z * v.y,
+                z * v.x - x * v.z,
+                x * v.y - y * v.x);
+  }
+
+  Vec3 operator+ (const Vec3& v) const {
+    return Vec3(x + v.x, y + v.y, z + v.z);
+  }
+  Vec3 operator- (const Vec3& v) const {
+    return Vec3(x - v.x, y - v.y, z - v.z);
+  }
+  Vec3 operator* (T t) const {
+    return Vec3(x * t, y * t, z * t);
+  }
+  Vec3 operator/ (T t) const {
+    return Vec3(x / t, y / t, z / t);
+  }
+  friend Vec3 operator* (T t, const Vec3& v) {
+    return Vec3(v.x * t, v.y * t, v.z * t);
+  }
+  Vec3 operator- () const {
+    return Vec3(-x , -y, -z);
+  }
+
+  Vec3& operator+= (const Vec3& v) {
+    x += v.x;
+    y += v.y;
+    z += v.z;
+    return *this;
+  }
+  Vec3& operator-= (const Vec3& v) {
+    x -= v.x;
+    y -= v.y;
+    z -= v.z;
+    return *this;
+  }
+  Vec3& operator*= (T t) {
+    x *= t;
+    y *= t;
+    z *= t;
+    return *this;
+  }
+  Vec3& operator/= (T t) {
+    x /= t;
+    y /= t;
+    z /= t;
+    return *this;
   }
 };
 
 using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
+
+static_assert(sizeof(Vec3f) == sizeof(float) * 3);
+static_assert(sizeof(Vec3d) == sizeof(double) * 3);
