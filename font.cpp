@@ -2,7 +2,7 @@
 
 #include "deps/stb_truetype.h"
 #include "draw.h"
-#include "io.h"
+#include "simple_io.h"
 #include "deps/glad.h"
 #include "shader.h"
 

@@ -1,6 +1,6 @@
 #include "deps/glad.h"
 #include "shader.h"
-#include "io.h"
+#include "simple_io.h"
 
 namespace {
 template <GLenum shader_type>
