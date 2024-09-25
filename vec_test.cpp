@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(Vec3fTest, Add) {
+TEST(Vec3Test, Add) {
   Vec3f a(1, 2, 3);
   Vec3f b(4, 5, 6);
   Vec3f result = a + b;
@@ -19,7 +19,7 @@ TEST(Vec3fTest, Add) {
   EXPECT_NEAR(a.z, 18, 1e-9);
 }
 
-TEST(Vec3fTest, Sub) {
+TEST(Vec3Test, Sub) {
   Vec3f a(6, 5, 4);
   Vec3f b(1, 2, 3);
   Vec3f result = a - b;
@@ -36,7 +36,7 @@ TEST(Vec3fTest, Sub) {
   EXPECT_EQ(a.z, 0);
 }
 
-TEST(Vec3fTest, Mul) {
+TEST(Vec3Test, Mul) {
   Vec3f a(1, 2, 3);
   {
     Vec3f result = a * 1.5;
@@ -56,7 +56,7 @@ TEST(Vec3fTest, Mul) {
   EXPECT_NEAR(a.z, 4.5, 1e-9);
 }
 
-TEST(Vec3fTest, Div) {
+TEST(Vec3Test, Div) {
   Vec3f a(1, 2, 3);
   Vec3f result = a / 2;
   EXPECT_NEAR(result.x, 0.5, 1e-9);
