@@ -1,6 +1,10 @@
 #include "simple_hash_map.h"
 #include "unordered_dense.h"
 
+#include "benchmark/benchmark.h"
+
+#include <random>
+
 class AutoTimer {
   const std::chrono::time_point<std::chrono::steady_clock> tp_;
   std::string info_;
@@ -12,12 +16,14 @@ public:
   }
 };
 
-std::vector<unsigned long long> keys;
-std::vector<unsigned long long> keys_shuffled;
+typedef unsigned long long uLL;
+
+std::vector<uLL> keys;
+std::vector<uLL> keys_shuffled;
 
 void InitKeys() {
   constexpr int kNumKeys = 1000000;
-  unsigned long long key = 1;
+  uLL key = 1;
   for (int i = 0; i < kNumKeys; ++i) {
     keys.push_back(key *= 5);
   }
@@ -25,88 +31,124 @@ void InitKeys() {
   std::random_shuffle(keys_shuffled.begin(), keys_shuffled.end());
 }
 
-namespace old_hash_map_benchmark {
+unsigned int XorShift96() {  /* A George Marsaglia generator, period 2^96-1 */
+  static unsigned int x=123456789, y=362436069, z=521288629;
+  x ^= x << 16;
+  x ^= x >> 5;
+  x ^= x << 1;
+  unsigned int t = x;
+  x = y;
+  y = z;
+  z = t ^ x ^ y;
+  return z;
+}
+
+void InitKeys_Random() {
+  constexpr int kNumKeys = 1000000;
+  for (int i = 0; i < kNumKeys; ++i) {
+    keys.push_back(uLL(XorShift96()) << 32 | XorShift96());
+  }
+  keys_shuffled = keys;
+  std::random_shuffle(keys_shuffled.begin(), keys_shuffled.end());
+}
+
+void InitKeys_mt19937() {
+  constexpr int kNumKeys = 1000000;
+  std::mt19937 generator;
+  for (int i = 0; i < kNumKeys; ++i) {
+    keys.push_back(generator());
+  }
+  keys_shuffled = keys;
+  std::random_shuffle(keys_shuffled.begin(), keys_shuffled.end());
+}
+
 old_hash_map my_old_hash_map;
-void BM() {
-  {
-    AutoTimer auto_timer("old_hash_map");
+int cnt = 0;
+
+static void BM_MyOldHashMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    // AutoTimer my_timer("my_timer");
+    cnt++;
+    my_old_hash_map.clear();
     for (const auto key : keys) {
       my_old_hash_map[key] = key;
     }
   }
-  {
-    AutoTimer auto_timer("old_hash_map");
+}
+BENCHMARK(BM_MyOldHashMap_ClearAndPush);
+
+static void BM_MyOldHashMap_CacheAccess(benchmark::State& state) {
+  for (auto _ : state) {
     for (const auto key : keys) {
       my_old_hash_map[key] = key;
     }
   }
-  {
-    AutoTimer auto_timer("old_hash_map");
+}
+BENCHMARK(BM_MyOldHashMap_CacheAccess);
+
+static void BM_MyOldHashMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       my_old_hash_map[key] = key;
     }
   }
 }
-}  // namespace old_hash_map_benchmark
+BENCHMARK(BM_MyOldHashMap_RandomAccess);
 
-namespace ankerl_benchmark {
 struct custom_hash_simple {
-  using is_avalanching = void;
+  // using is_avalanching = void;
   auto operator()(unsigned long long const& x) const noexcept -> uint64_t {
     return x;
   }
 };
+
 ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
-void BM() {
-  {
-    AutoTimer auto_timer("ankerl hash map");
+
+static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    ankerl_map.clear();
     for (const auto key : keys) {
       ankerl_map[key] = key;
     }
   }
-  {
-    AutoTimer auto_timer("ankerl hash map");
-    for (const auto key : keys) {
-      ankerl_map[key] = key;
-    }
-  }
-  {
-    AutoTimer auto_timer("ankerl hash map");
+}
+BENCHMARK(BM_AnkerlMap_ClearAndPush);
+
+static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       ankerl_map[key] = key;
     }
   }
 }
-}  // namespace old_hash_map_benchmark
+BENCHMARK(BM_AnkerlMap_RandomAccess);
 
-namespace std_benchmark {
 std::unordered_map<unsigned long long, int> map;
-void BM() {
-  {
-    AutoTimer auto_timer("std hash map");
+
+static void BM_StlMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    map.clear();
     for (const auto key : keys) {
       map[key] = key;
     }
   }
-  {
-    AutoTimer auto_timer("std hash map");
-    for (const auto key : keys) {
-      map[key] = key;
-    }
-  }
-  {
-    AutoTimer auto_timer("std hash map");
+}
+BENCHMARK(BM_StlMap_ClearAndPush);
+
+static void BM_StlMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       map[key] = key;
     }
   }
 }
-}  // namespace old_hash_map_benchmark
+BENCHMARK(BM_StlMap_RandomAccess);
 
-int main() {
-  InitKeys();
-  old_hash_map_benchmark::BM();
-  ankerl_benchmark::BM();
-  std_benchmark::BM();
+int main(int argc, char** argv) {
+  InitKeys_Random();
+  benchmark::Initialize(&argc, argv);
+  benchmark::RunSpecifiedBenchmarks();
+  benchmark::Shutdown();
+  printf("cnt = %d\n", cnt);
   return 0;
 }
