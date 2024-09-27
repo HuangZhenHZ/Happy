@@ -1,7 +1,10 @@
 #include "simple_hash_map.h"
 #include "unordered_dense.h"
-#include "robin_map.h"
-#include "hopscotch_map.h"
+#include "tsl/robin_map.h"
+#include "tsl/hopscotch_map.h"
+// #include "parallel_hashmap/phmap.h"
+#include "gtl/phmap.hpp"
+#include "sparsepp/spp.h"
 
 #include "gtest/gtest.h"
 
@@ -64,6 +67,53 @@ TEST(tsl, hopscotch_map) {
   EXPECT_EQ(tsl_map[1], 34);
   EXPECT_EQ(tsl_map[2], 0);
   EXPECT_TRUE(tsl_map.count(2));
+}
+
+/*
+TEST(phmap, phmap) {
+  phmap::flat_hash_map<unsigned long long, int> map;
+  EXPECT_FALSE(map.count(0));
+  EXPECT_FALSE(map.count(1));
+  map[0] = 12;
+  map[1] = 34;
+  EXPECT_TRUE(map.count(0));
+  EXPECT_TRUE(map.count(1));
+  EXPECT_FALSE(map.count(2));
+  EXPECT_EQ(map[0], 12);
+  EXPECT_EQ(map[1], 34);
+  EXPECT_EQ(map[2], 0);
+  EXPECT_TRUE(map.count(2));
+}
+*/
+
+TEST(gtlmap, gtlmap) {
+  gtl::flat_hash_map<unsigned long long, int> map;
+  EXPECT_FALSE(map.count(0));
+  EXPECT_FALSE(map.count(1));
+  map[0] = 12;
+  map[1] = 34;
+  EXPECT_TRUE(map.count(0));
+  EXPECT_TRUE(map.count(1));
+  EXPECT_FALSE(map.count(2));
+  EXPECT_EQ(map[0], 12);
+  EXPECT_EQ(map[1], 34);
+  EXPECT_EQ(map[2], 0);
+  EXPECT_TRUE(map.count(2));
+}
+
+TEST(sppmap, sppmap) {
+  spp::sparse_hash_map<unsigned long long, int> map;
+  EXPECT_FALSE(map.count(0));
+  EXPECT_FALSE(map.count(1));
+  map[0] = 12;
+  map[1] = 34;
+  EXPECT_TRUE(map.count(0));
+  EXPECT_TRUE(map.count(1));
+  EXPECT_FALSE(map.count(2));
+  EXPECT_EQ(map[0], 12);
+  EXPECT_EQ(map[1], 34);
+  EXPECT_EQ(map[2], 0);
+  EXPECT_TRUE(map.count(2));
 }
 
 int main(int argc, char **argv) {

@@ -1,7 +1,10 @@
 #include "simple_hash_map.h"
 #include "unordered_dense.h"
-#include "robin_map.h"
-#include "hopscotch_map.h"
+#include "tsl/robin_map.h"
+#include "tsl/hopscotch_map.h"
+// #include "parallel_hashmap/phmap.h"
+#include "gtl/phmap.hpp"
+#include "sparsepp/spp.h"
 
 #include "benchmark/benchmark.h"
 
@@ -104,6 +107,7 @@ struct custom_hash_simple {
   }
 };
 
+/*
 ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
 
 static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
@@ -166,6 +170,72 @@ static void BM_TslMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_TslMap_RandomAccess);
+*/
+
+/*
+phmap::flat_hash_map<unsigned long long, int> ph_map;
+
+static void BM_PhMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    ph_map.clear();
+    for (const auto key : keys) {
+      ph_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_PhMap_ClearAndPush);
+
+static void BM_PhMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      ph_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_PhMap_RandomAccess);
+*/
+
+gtl::flat_hash_map<unsigned long long, int> gtl_map;
+
+static void BM_GtlMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    gtl_map.clear();
+    for (const auto key : keys) {
+      gtl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_GtlMap_ClearAndPush);
+
+static void BM_GtlMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      gtl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_GtlMap_RandomAccess);
+
+spp::sparse_hash_map<unsigned long long, int> spp_map;
+
+static void BM_SppMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    spp_map.clear();
+    for (const auto key : keys) {
+      spp_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_SppMap_ClearAndPush);
+
+static void BM_SppMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      spp_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_SppMap_RandomAccess);
 
 int main(int argc, char** argv) {
   InitKeys_Random();
