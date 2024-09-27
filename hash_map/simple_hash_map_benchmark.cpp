@@ -1,5 +1,7 @@
 #include "simple_hash_map.h"
 #include "unordered_dense.h"
+#include "robin_map.h"
+#include "hopscotch_map.h"
 
 #include "benchmark/benchmark.h"
 
@@ -143,6 +145,27 @@ static void BM_StlMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_StlMap_RandomAccess);
+
+tsl::robin_map<unsigned long long, int> tsl_map;
+
+static void BM_TslMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    tsl_map.clear();
+    for (const auto key : keys) {
+      tsl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_TslMap_ClearAndPush);
+
+static void BM_TslMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      tsl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_TslMap_RandomAccess);
 
 int main(int argc, char** argv) {
   InitKeys_Random();

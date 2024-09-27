@@ -1,5 +1,7 @@
 #include "simple_hash_map.h"
 #include "unordered_dense.h"
+#include "robin_map.h"
+#include "hopscotch_map.h"
 
 #include "gtest/gtest.h"
 
@@ -32,6 +34,36 @@ TEST(ankerl, ankerl) {
   EXPECT_EQ(ankerl_map[1], 34);
   EXPECT_EQ(ankerl_map[2], 0);
   EXPECT_TRUE(ankerl_map.count(2));
+}
+
+TEST(tsl, robin_map) {
+  tsl::robin_map<unsigned long long, int> tsl_map;
+  EXPECT_FALSE(tsl_map.count(0));
+  EXPECT_FALSE(tsl_map.count(1));
+  tsl_map[0] = 12;
+  tsl_map[1] = 34;
+  EXPECT_TRUE(tsl_map.count(0));
+  EXPECT_TRUE(tsl_map.count(1));
+  EXPECT_FALSE(tsl_map.count(2));
+  EXPECT_EQ(tsl_map[0], 12);
+  EXPECT_EQ(tsl_map[1], 34);
+  EXPECT_EQ(tsl_map[2], 0);
+  EXPECT_TRUE(tsl_map.count(2));
+}
+
+TEST(tsl, hopscotch_map) {
+  tsl::hopscotch_map<unsigned long long, int> tsl_map;
+  EXPECT_FALSE(tsl_map.count(0));
+  EXPECT_FALSE(tsl_map.count(1));
+  tsl_map[0] = 12;
+  tsl_map[1] = 34;
+  EXPECT_TRUE(tsl_map.count(0));
+  EXPECT_TRUE(tsl_map.count(1));
+  EXPECT_FALSE(tsl_map.count(2));
+  EXPECT_EQ(tsl_map[0], 12);
+  EXPECT_EQ(tsl_map[1], 34);
+  EXPECT_EQ(tsl_map[2], 0);
+  EXPECT_TRUE(tsl_map.count(2));
 }
 
 int main(int argc, char **argv) {
