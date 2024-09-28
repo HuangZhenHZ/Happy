@@ -82,6 +82,7 @@ static void BM_MyOldHashMap_ClearAndPush(benchmark::State& state) {
 }
 BENCHMARK(BM_MyOldHashMap_ClearAndPush);
 
+/*
 static void BM_MyOldHashMap_CacheAccess(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto key : keys) {
@@ -90,6 +91,7 @@ static void BM_MyOldHashMap_CacheAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_MyOldHashMap_CacheAccess);
+*/
 
 static void BM_MyOldHashMap_RandomAccess(benchmark::State& state) {
   for (auto _ : state) {
@@ -100,6 +102,30 @@ static void BM_MyOldHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_MyOldHashMap_RandomAccess);
 
+new_hash_map my_new_hash_map;
+
+static void BM_MyNewHashMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    // AutoTimer my_timer("my_timer");
+    cnt++;
+    my_new_hash_map.clear();
+    for (const auto key : keys) {
+      my_new_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_MyNewHashMap_ClearAndPush);
+
+static void BM_MyNewHashMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      my_new_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_MyNewHashMap_RandomAccess);
+
+/*
 struct custom_hash_simple {
   // using is_avalanching = void;
   auto operator()(unsigned long long const& x) const noexcept -> uint64_t {
@@ -107,7 +133,6 @@ struct custom_hash_simple {
   }
 };
 
-/*
 ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
 
 static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
@@ -195,6 +220,7 @@ static void BM_PhMap_RandomAccess(benchmark::State& state) {
 BENCHMARK(BM_PhMap_RandomAccess);
 */
 
+/*
 gtl::flat_hash_map<unsigned long long, int> gtl_map;
 
 static void BM_GtlMap_ClearAndPush(benchmark::State& state) {
@@ -236,6 +262,7 @@ static void BM_SppMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_SppMap_RandomAccess);
+*/
 
 int main(int argc, char** argv) {
   InitKeys_Random();
