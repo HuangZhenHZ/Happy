@@ -55,101 +55,35 @@ TEST(new_hash_map, new_hash_map) {
   TestHashMap(my_new_hash_map);
 }
 
-/*
+TEST(vector_hash_map, vector_hash_map) {
+  VectorHashMap vector_hash_map;
+  TestHashMap(vector_hash_map);
+}
+
 TEST(ankerl, ankerl) {
   ankerl::unordered_dense::map<unsigned long long, int> ankerl_map;
-  EXPECT_FALSE(ankerl_map.count(0));
-  EXPECT_FALSE(ankerl_map.count(1));
-  ankerl_map[0] = 12;
-  ankerl_map[1] = 34;
-  EXPECT_TRUE(ankerl_map.count(0));
-  EXPECT_TRUE(ankerl_map.count(1));
-  EXPECT_FALSE(ankerl_map.count(2));
-  EXPECT_EQ(ankerl_map[0], 12);
-  EXPECT_EQ(ankerl_map[1], 34);
-  EXPECT_EQ(ankerl_map[2], 0);
-  EXPECT_TRUE(ankerl_map.count(2));
+  TestHashMap(ankerl_map);
 }
 
 TEST(tsl, robin_map) {
   tsl::robin_map<unsigned long long, int> tsl_map;
-  EXPECT_FALSE(tsl_map.count(0));
-  EXPECT_FALSE(tsl_map.count(1));
-  tsl_map[0] = 12;
-  tsl_map[1] = 34;
-  EXPECT_TRUE(tsl_map.count(0));
-  EXPECT_TRUE(tsl_map.count(1));
-  EXPECT_FALSE(tsl_map.count(2));
-  EXPECT_EQ(tsl_map[0], 12);
-  EXPECT_EQ(tsl_map[1], 34);
-  EXPECT_EQ(tsl_map[2], 0);
-  EXPECT_TRUE(tsl_map.count(2));
+  TestHashMap(tsl_map);
 }
 
 TEST(tsl, hopscotch_map) {
   tsl::hopscotch_map<unsigned long long, int> tsl_map;
-  EXPECT_FALSE(tsl_map.count(0));
-  EXPECT_FALSE(tsl_map.count(1));
-  tsl_map[0] = 12;
-  tsl_map[1] = 34;
-  EXPECT_TRUE(tsl_map.count(0));
-  EXPECT_TRUE(tsl_map.count(1));
-  EXPECT_FALSE(tsl_map.count(2));
-  EXPECT_EQ(tsl_map[0], 12);
-  EXPECT_EQ(tsl_map[1], 34);
-  EXPECT_EQ(tsl_map[2], 0);
-  EXPECT_TRUE(tsl_map.count(2));
+  TestHashMap(tsl_map);
 }
-*/
 
-/*
-TEST(phmap, phmap) {
-  phmap::flat_hash_map<unsigned long long, int> map;
-  EXPECT_FALSE(map.count(0));
-  EXPECT_FALSE(map.count(1));
-  map[0] = 12;
-  map[1] = 34;
-  EXPECT_TRUE(map.count(0));
-  EXPECT_TRUE(map.count(1));
-  EXPECT_FALSE(map.count(2));
-  EXPECT_EQ(map[0], 12);
-  EXPECT_EQ(map[1], 34);
-  EXPECT_EQ(map[2], 0);
-  EXPECT_TRUE(map.count(2));
-}
-*/
-
-/*
 TEST(gtlmap, gtlmap) {
   gtl::flat_hash_map<unsigned long long, int> map;
-  EXPECT_FALSE(map.count(0));
-  EXPECT_FALSE(map.count(1));
-  map[0] = 12;
-  map[1] = 34;
-  EXPECT_TRUE(map.count(0));
-  EXPECT_TRUE(map.count(1));
-  EXPECT_FALSE(map.count(2));
-  EXPECT_EQ(map[0], 12);
-  EXPECT_EQ(map[1], 34);
-  EXPECT_EQ(map[2], 0);
-  EXPECT_TRUE(map.count(2));
+  TestHashMap(map);
 }
 
 TEST(sppmap, sppmap) {
   spp::sparse_hash_map<unsigned long long, int> map;
-  EXPECT_FALSE(map.count(0));
-  EXPECT_FALSE(map.count(1));
-  map[0] = 12;
-  map[1] = 34;
-  EXPECT_TRUE(map.count(0));
-  EXPECT_TRUE(map.count(1));
-  EXPECT_FALSE(map.count(2));
-  EXPECT_EQ(map[0], 12);
-  EXPECT_EQ(map[1], 34);
-  EXPECT_EQ(map[2], 0);
-  EXPECT_TRUE(map.count(2));
+  TestHashMap(map);
 }
-*/
 
 int main(int argc, char **argv) {
   printf("Running main() from %s\n", __FILE__);

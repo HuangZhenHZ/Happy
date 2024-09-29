@@ -10,21 +10,19 @@
 
 #include <random>
 
-class AutoTimer {
-  const std::chrono::time_point<std::chrono::steady_clock> tp_;
-  std::string info_;
-public:
-  AutoTimer(const std::string& str) : tp_(std::chrono::steady_clock::now()), info_(std::move(str)) {}
-  ~AutoTimer() {
-    auto tp2 = std::chrono::steady_clock::now();
-    printf("%s: time = %lld\n", info_.c_str(), std::chrono::duration_cast<std::chrono::microseconds>(tp2 - tp_).count());
-  }
-};
-
 typedef unsigned long long uLL;
 
 std::vector<uLL> keys;
 std::vector<uLL> keys_shuffled;
+
+static void BM_CalcHash(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys) {
+      benchmark::DoNotOptimize((key * 0x9ddfea08eb382d69) >> 44);
+    }
+  }
+}
+BENCHMARK(BM_CalcHash);
 
 void InitKeys() {
   constexpr int kNumKeys = 1000000;
@@ -125,7 +123,29 @@ static void BM_MyNewHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_MyNewHashMap_RandomAccess);
 
-/*
+VectorHashMap vector_hash_map;
+
+static void BM_VectorHashMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    // AutoTimer my_timer("my_timer");
+    cnt++;
+    vector_hash_map.clear();
+    for (const auto key : keys) {
+      vector_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_VectorHashMap_ClearAndPush);
+
+static void BM_VectorHashMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      vector_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_VectorHashMap_RandomAccess);
+
 struct custom_hash_simple {
   // using is_avalanching = void;
   auto operator()(unsigned long long const& x) const noexcept -> uint64_t {
@@ -154,6 +174,7 @@ static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_AnkerlMap_RandomAccess);
 
+/*
 std::unordered_map<unsigned long long, int> map;
 
 static void BM_StlMap_ClearAndPush(benchmark::State& state) {

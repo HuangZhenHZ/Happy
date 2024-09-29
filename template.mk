@@ -7,6 +7,10 @@ DIRS = $(DIRS_WITH_SLASH:/=)
 $(TARGET).exe: $(OBJS)
 	g++ $(OBJS) -o $(TARGET).exe $(LDFLAGS) -s
 
+.PHONY: run
+run:
+	$(subst /,\,$(TARGET).exe)
+
 $(DIRS):
 ifeq ($(OS),Windows_NT)
 	mkdir $(subst /,\,$@)
