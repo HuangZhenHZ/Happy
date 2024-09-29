@@ -1,4 +1,4 @@
-CXXFLAGS = -O2 -pipe -Wall -Werror -I.
+CXXFLAGS = -O3 -pipe -Wall -Werror -maes -msse4.1 -DNDEBUG -I.
 BUILD_DIR = build/
 OBJS = $(addprefix $(BUILD_DIR), $(SRCS:.cpp=.o))
 DIRS_WITH_SLASH = $(sort $(dir $(OBJS)))

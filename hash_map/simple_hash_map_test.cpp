@@ -5,6 +5,7 @@
 // #include "parallel_hashmap/phmap.h"
 #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
+// #include "absl/container/flat_hash_map.h"
 
 #include "gtest/gtest.h"
 
@@ -84,6 +85,11 @@ TEST(sppmap, sppmap) {
   spp::sparse_hash_map<unsigned long long, int> map;
   TestHashMap(map);
 }
+
+// TEST(googlemap, googlemap) {
+//   absl::flat_hash_map<unsigned long long, int> map;
+//   TestHashMap(map);
+// }
 
 int main(int argc, char **argv) {
   printf("Running main() from %s\n", __FILE__);

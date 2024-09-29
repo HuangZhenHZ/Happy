@@ -6,3 +6,5 @@
 *.d
 *.ttc
 *.jpg
+absl
+libabsl

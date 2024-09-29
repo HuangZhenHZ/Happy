@@ -5,6 +5,7 @@
 // #include "parallel_hashmap/phmap.h"
 #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
+// #include "absl/container/flat_hash_map.h"
 
 #include "benchmark/benchmark.h"
 
@@ -173,6 +174,25 @@ static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_AnkerlMap_RandomAccess);
+
+// absl::flat_hash_map<unsigned long long, int> google_map;
+// static void BM_GoogleMap_ClearAndPush(benchmark::State& state) {
+//   for (auto _ : state) {
+//     google_map.clear();
+//     for (const auto key : keys) {
+//       google_map[key] = key;
+//     }
+//   }
+// }
+// BENCHMARK(BM_GoogleMap_ClearAndPush);
+// static void BM_GoogleMap_RandomAccess(benchmark::State& state) {
+//   for (auto _ : state) {
+//     for (const auto key : keys_shuffled) {
+//       google_map[key] = key;
+//     }
+//   }
+// }
+// BENCHMARK(BM_GoogleMap_RandomAccess);
 
 /*
 std::unordered_map<unsigned long long, int> map;
