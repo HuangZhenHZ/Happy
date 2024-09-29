@@ -61,6 +61,22 @@ TEST(vector_hash_map, vector_hash_map) {
   TestHashMap(vector_hash_map);
 }
 
+// TEST(FlatHashMap, FlatHashMap) {
+//   FlatHashMap flat_hash_map;
+//   TestHashMap(flat_hash_map);
+//   flat_hash_map.PrintDebugInfo();
+//   // flat_hash_map[1ll << 60] = 1;
+//   // flat_hash_map.PrintDebugInfo();
+//   // flat_hash_map[2ll << 60] = 2;
+//   // EXPECT_TRUE(flat_hash_map.count(2ll << 60));
+//   // flat_hash_map.PrintDebugInfo();
+//   // flat_hash_map[1ll << 60 | 1] = 3;
+//   // flat_hash_map.PrintDebugInfo();
+//   // EXPECT_TRUE(flat_hash_map.count(1ll << 60));
+//   // EXPECT_TRUE(flat_hash_map.count(2ll << 60));
+//   // EXPECT_TRUE(flat_hash_map.count(1ll << 60 | 1));
+// }
+
 TEST(ankerl, ankerl) {
   ankerl::unordered_dense::map<unsigned long long, int> ankerl_map;
   TestHashMap(ankerl_map);

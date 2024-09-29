@@ -11,6 +11,18 @@
 
 #include <random>
 
+unsigned int XorShift96() {  /* A George Marsaglia generator, period 2^96-1 */
+  static unsigned int x=123456789, y=362436069, z=521288629;
+  x ^= x << 16;
+  x ^= x >> 5;
+  x ^= x << 1;
+  unsigned int t = x;
+  x = y;
+  y = z;
+  z = t ^ x ^ y;
+  return z;
+}
+
 typedef unsigned long long uLL;
 
 std::vector<uLL> keys;
@@ -25,6 +37,42 @@ static void BM_CalcHash(benchmark::State& state) {
 }
 BENCHMARK(BM_CalcHash);
 
+static void BM_RandomRehash(benchmark::State& state) {
+  std::vector<std::pair<int, int>> h_and_ne;
+  std::vector<int> la;
+  h_and_ne.resize(1000000);
+  la.resize(1000000);
+  for (int i = 0; i < (int)h_and_ne.size(); ++i) {
+    h_and_ne[i].first = XorShift96() % 1000000;
+  }
+
+  for (auto _ : state) {
+    for (int i = 0; i < 1000000; ++i) {
+      h_and_ne[i].second = la[h_and_ne[i].first];
+      la[h_and_ne[i].first] = i;
+    }
+  }
+}
+BENCHMARK(BM_RandomRehash);
+
+static void BM_CacheRehash(benchmark::State& state) {
+  std::vector<std::pair<int, int>> h_and_ne;
+  std::vector<int> la;
+  h_and_ne.resize(1000000);
+  la.resize(1000000);
+  for (int i = 0; i < (int)h_and_ne.size(); ++i) {
+    h_and_ne[i].first = i;
+  }
+
+  for (auto _ : state) {
+    for (int i = 0; i < 1000000; ++i) {
+      h_and_ne[i].second = la[h_and_ne[i].first];
+      la[h_and_ne[i].first] = i;
+    }
+  }
+}
+BENCHMARK(BM_CacheRehash);
+
 void InitKeys() {
   constexpr int kNumKeys = 1000000;
   uLL key = 1;
@@ -33,18 +81,6 @@ void InitKeys() {
   }
   keys_shuffled = keys;
   std::random_shuffle(keys_shuffled.begin(), keys_shuffled.end());
-}
-
-unsigned int XorShift96() {  /* A George Marsaglia generator, period 2^96-1 */
-  static unsigned int x=123456789, y=362436069, z=521288629;
-  x ^= x << 16;
-  x ^= x >> 5;
-  x ^= x << 1;
-  unsigned int t = x;
-  x = y;
-  y = z;
-  z = t ^ x ^ y;
-  return z;
 }
 
 void InitKeys_Random() {

@@ -1,4 +1,5 @@
-CXXFLAGS = -O3 -pipe -Wall -Werror -maes -msse4.1 -DNDEBUG -I.
+CXXFLAGS = -O2 -pipe -Wall -Werror -I.
+# -maes -msse4.1 -DNDEBUG
 BUILD_DIR = build/
 OBJS = $(addprefix $(BUILD_DIR), $(SRCS:.cpp=.o))
 DIRS_WITH_SLASH = $(sort $(dir $(OBJS)))
@@ -8,7 +9,7 @@ $(TARGET).exe: $(OBJS)
 	g++ $(OBJS) -o $(TARGET).exe $(LDFLAGS) -s
 
 .PHONY: run
-run:
+run: $(TARGET).exe
 	$(subst /,\,$(TARGET).exe)
 
 $(DIRS):
