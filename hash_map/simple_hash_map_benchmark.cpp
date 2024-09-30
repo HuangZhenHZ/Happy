@@ -28,6 +28,34 @@ typedef unsigned long long uLL;
 std::vector<uLL> keys;
 std::vector<uLL> keys_shuffled;
 
+struct custom_hash_simple {
+  // using is_avalanching = void;
+  auto operator()(unsigned long long const& x) const noexcept -> uint64_t {
+    return x;
+  }
+};
+
+ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
+
+static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    ankerl_map.clear();
+    for (const auto key : keys) {
+      ankerl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_AnkerlMap_ClearAndPush);
+
+static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      ankerl_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_AnkerlMap_RandomAccess);
+
 static void BM_CalcHash(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto key : keys) {
@@ -37,41 +65,41 @@ static void BM_CalcHash(benchmark::State& state) {
 }
 BENCHMARK(BM_CalcHash);
 
-static void BM_RandomRehash(benchmark::State& state) {
-  std::vector<std::pair<int, int>> h_and_ne;
-  std::vector<int> la;
-  h_and_ne.resize(1000000);
-  la.resize(1000000);
-  for (int i = 0; i < (int)h_and_ne.size(); ++i) {
-    h_and_ne[i].first = XorShift96() % 1000000;
-  }
+std::vector<std::pair<int, int>> h_and_ne_random;
+std::vector<std::pair<int, int>> h_and_ne_cache;
+std::vector<int> la;
 
-  for (auto _ : state) {
-    for (int i = 0; i < 1000000; ++i) {
-      h_and_ne[i].second = la[h_and_ne[i].first];
-      la[h_and_ne[i].first] = i;
-    }
+void Init() {
+  h_and_ne_random.resize(1000000);
+  h_and_ne_cache.resize(1000000);
+  la.resize(1000000);
+  for (int i = 0; i < (int)h_and_ne_random.size(); ++i) {
+    h_and_ne_random[i].first = XorShift96() % 1000000;
+  }
+  for (int i = 0; i < (int)h_and_ne_cache.size(); ++i) {
+    h_and_ne_cache[i].first = i;
   }
 }
-BENCHMARK(BM_RandomRehash);
 
 static void BM_CacheRehash(benchmark::State& state) {
-  std::vector<std::pair<int, int>> h_and_ne;
-  std::vector<int> la;
-  h_and_ne.resize(1000000);
-  la.resize(1000000);
-  for (int i = 0; i < (int)h_and_ne.size(); ++i) {
-    h_and_ne[i].first = i;
-  }
-
   for (auto _ : state) {
     for (int i = 0; i < 1000000; ++i) {
-      h_and_ne[i].second = la[h_and_ne[i].first];
-      la[h_and_ne[i].first] = i;
+      h_and_ne_cache[i].second = la[h_and_ne_cache[i].first];
+      la[h_and_ne_cache[i].first] = i;
     }
   }
 }
 BENCHMARK(BM_CacheRehash);
+
+static void BM_RandomRehash(benchmark::State& state) {
+  for (auto _ : state) {
+    for (int i = 0; i < 1000000; ++i) {
+      h_and_ne_random[i].second = la[h_and_ne_random[i].first];
+      la[h_and_ne_random[i].first] = i;
+    }
+  }
+}
+BENCHMARK(BM_RandomRehash);
 
 void InitKeys() {
   constexpr int kNumKeys = 1000000;
@@ -183,33 +211,28 @@ static void BM_VectorHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_VectorHashMap_RandomAccess);
 
-struct custom_hash_simple {
-  // using is_avalanching = void;
-  auto operator()(unsigned long long const& x) const noexcept -> uint64_t {
-    return x;
-  }
-};
+HybridHashMap hybrid_hash_map;
 
-ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
-
-static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
+static void BM_HybridHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    ankerl_map.clear();
+    // AutoTimer my_timer("my_timer");
+    cnt++;
+    hybrid_hash_map.clear();
     for (const auto key : keys) {
-      ankerl_map[key] = key;
+      hybrid_hash_map[key] = key;
     }
   }
 }
-BENCHMARK(BM_AnkerlMap_ClearAndPush);
+BENCHMARK(BM_HybridHashMap_ClearAndPush);
 
-static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
+static void BM_HybridHashMap_RandomAccess(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
-      ankerl_map[key] = key;
+      hybrid_hash_map[key] = key;
     }
   }
 }
-BENCHMARK(BM_AnkerlMap_RandomAccess);
+BENCHMARK(BM_HybridHashMap_RandomAccess);
 
 // absl::flat_hash_map<unsigned long long, int> google_map;
 // static void BM_GoogleMap_ClearAndPush(benchmark::State& state) {
@@ -342,6 +365,7 @@ BENCHMARK(BM_SppMap_RandomAccess);
 */
 
 int main(int argc, char** argv) {
+  Init();
   InitKeys_Random();
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();

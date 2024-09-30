@@ -77,6 +77,11 @@ TEST(vector_hash_map, vector_hash_map) {
 //   // EXPECT_TRUE(flat_hash_map.count(1ll << 60 | 1));
 // }
 
+TEST(HybridHashMap, HybridHashMap) {
+  HybridHashMap map;
+  TestHashMap(map);
+}
+
 TEST(ankerl, ankerl) {
   ankerl::unordered_dense::map<unsigned long long, int> ankerl_map;
   TestHashMap(ankerl_map);
