@@ -6,6 +6,7 @@
 #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
 // #include "absl/container/flat_hash_map.h"
+#include "hash_table8.hpp"
 
 #include "benchmark/benchmark.h"
 
@@ -55,6 +56,27 @@ static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_AnkerlMap_RandomAccess);
+
+emhash8::HashMap<unsigned long long, int> emhash8_map;
+
+static void BM_Emhash8_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    emhash8_map.clear();
+    for (const auto key : keys) {
+      emhash8_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_Emhash8_ClearAndPush);
+
+static void BM_Emhash8_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      emhash8_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_Emhash8_RandomAccess);
 
 static void BM_CalcHash(benchmark::State& state) {
   for (auto _ : state) {

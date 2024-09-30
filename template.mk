@@ -5,18 +5,18 @@ OBJS = $(addprefix $(BUILD_DIR), $(SRCS:.cpp=.o))
 DIRS_WITH_SLASH = $(sort $(dir $(OBJS)))
 DIRS = $(DIRS_WITH_SLASH:/=)
 
-$(TARGET).exe: $(OBJS)
-	g++ $(OBJS) -o $(TARGET).exe $(LDFLAGS) -s
+$(BUILD_DIR)$(TARGET).exe: $(OBJS)
+	g++ $(OBJS) -o $@ $(LDFLAGS) -s
 
 .PHONY: run
-run: $(TARGET).exe
-	$(subst /,\,$(TARGET).exe)
+run: $(BUILD_DIR)$(TARGET).exe
+	$(subst /,\,$<)
 
 $(DIRS):
 ifeq ($(OS),Windows_NT)
 	mkdir $(subst /,\,$@)
 else
-	mkdir $@
+	mkdir -p $@
 endif
 
 $(BUILD_DIR)%.d $(BUILD_DIR)%.o : %.cpp | $(DIRS)

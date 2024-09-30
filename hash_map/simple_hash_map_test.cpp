@@ -6,6 +6,7 @@
 #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
 // #include "absl/container/flat_hash_map.h"
+#include "hash_table8.hpp"
 
 #include "gtest/gtest.h"
 
@@ -104,6 +105,11 @@ TEST(gtlmap, gtlmap) {
 
 TEST(sppmap, sppmap) {
   spp::sparse_hash_map<unsigned long long, int> map;
+  TestHashMap(map);
+}
+
+TEST(emhash8, emhash8) {
+  emhash8::HashMap<unsigned long long, int> map;
   TestHashMap(map);
 }
 
