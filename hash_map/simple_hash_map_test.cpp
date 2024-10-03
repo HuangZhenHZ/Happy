@@ -2,8 +2,8 @@
 #include "unordered_dense.h"
 #include "tsl/robin_map.h"
 #include "tsl/hopscotch_map.h"
-// #include "parallel_hashmap/phmap.h"
-#include "gtl/phmap.hpp"
+#include "parallel_hashmap/phmap.h"
+// #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
 // #include "absl/container/flat_hash_map.h"
 #include "hash_table8.hpp"
@@ -28,7 +28,7 @@ void TestHashMap(HashMap &map) {
 
   std::vector<unsigned long long> keys;
   std::vector<unsigned long long> keys_shuffled;
-  constexpr int kNumKeys = 1000000;
+  constexpr int kNumKeys = 500000;
   std::mt19937 generator;
   for (int i = 0; i < kNumKeys; ++i) {
     keys.push_back(generator());
@@ -45,15 +45,13 @@ void TestHashMap(HashMap &map) {
   }
 }
 
-old_hash_map my_old_hash_map;
-
 TEST(old_hash_map, old_hash_map) {
+  old_hash_map my_old_hash_map;
   TestHashMap(my_old_hash_map);
 }
 
-new_hash_map my_new_hash_map;
-
 TEST(new_hash_map, new_hash_map) {
+  new_hash_map my_new_hash_map;
   TestHashMap(my_new_hash_map);
 }
 
@@ -72,6 +70,11 @@ TEST(HybridHashMap, HybridHashMap) {
   TestHashMap(map);
 }
 
+TEST(MyHashMapV2, MyHashMapV2) {
+  MyHashMapV2 map;
+  TestHashMap(map);
+}
+
 TEST(ankerl, ankerl) {
   ankerl::unordered_dense::map<unsigned long long, int> ankerl_map;
   TestHashMap(ankerl_map);
@@ -87,8 +90,8 @@ TEST(tsl, hopscotch_map) {
   TestHashMap(tsl_map);
 }
 
-TEST(gtlmap, gtlmap) {
-  gtl::flat_hash_map<unsigned long long, int> map;
+TEST(phmap, phmap) {
+  phmap::flat_hash_map<unsigned long long, int> map;
   TestHashMap(map);
 }
 

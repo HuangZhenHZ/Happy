@@ -2,8 +2,8 @@
 #include "unordered_dense.h"
 #include "tsl/robin_map.h"
 #include "tsl/hopscotch_map.h"
-// #include "parallel_hashmap/phmap.h"
-#include "gtl/phmap.hpp"
+#include "parallel_hashmap/phmap.h"
+// #include "gtl/phmap.hpp"
 #include "sparsepp/spp.h"
 // #include "absl/container/flat_hash_map.h"
 #include "hash_table8.hpp"
@@ -36,11 +36,9 @@ struct custom_hash_simple {
   }
 };
 
-ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
-
 static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    ankerl_map.clear();
+    ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
     for (const auto key : keys) {
       ankerl_map[key] = key;
     }
@@ -49,6 +47,10 @@ static void BM_AnkerlMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_AnkerlMap_ClearAndPush);
 
 static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
+  ankerl::unordered_dense::map<unsigned long long, int, custom_hash_simple> ankerl_map;
+  for (const auto key : keys) {
+    ankerl_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       ankerl_map[key] = key;
@@ -57,11 +59,9 @@ static void BM_AnkerlMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_AnkerlMap_RandomAccess);
 
-emhash8::HashMap<unsigned long long, int> emhash8_map;
-
 static void BM_Emhash8_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    emhash8_map.clear();
+    emhash8::HashMap<unsigned long long, int> emhash8_map;
     for (const auto key : keys) {
       emhash8_map[key] = key;
     }
@@ -70,6 +70,10 @@ static void BM_Emhash8_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_Emhash8_ClearAndPush);
 
 static void BM_Emhash8_RandomAccess(benchmark::State& state) {
+  emhash8::HashMap<unsigned long long, int> emhash8_map;
+  for (const auto key : keys) {
+    emhash8_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       emhash8_map[key] = key;
@@ -78,11 +82,9 @@ static void BM_Emhash8_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_Emhash8_RandomAccess);
 
-FlatHashMap my_flat_hash_map;
-
 static void BM_FlatHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    my_flat_hash_map.clear();
+    FlatHashMap my_flat_hash_map;
     for (const auto key : keys) {
       my_flat_hash_map[key] = key;
     }
@@ -91,6 +93,10 @@ static void BM_FlatHashMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_FlatHashMap_ClearAndPush);
 
 static void BM_FlatHashMap_RandomAccess(benchmark::State& state) {
+  FlatHashMap my_flat_hash_map;
+  for (const auto key : keys) {
+    my_flat_hash_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       my_flat_hash_map[key] = key;
@@ -98,6 +104,29 @@ static void BM_FlatHashMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_FlatHashMap_RandomAccess);
+
+static void BM_MyHashMapV2_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    MyHashMapV2 my_hash_map_v2;
+    for (const auto key : keys) {
+      my_hash_map_v2[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_MyHashMapV2_ClearAndPush);
+
+static void BM_MyHashMapV2_RandomAccess(benchmark::State& state) {
+  MyHashMapV2 my_hash_map_v2;
+  for (const auto key : keys) {
+    my_hash_map_v2[key] = key;
+  }
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      my_hash_map_v2[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_MyHashMapV2_RandomAccess);
 
 static void BM_CalcHash(benchmark::State& state) {
   for (auto _ : state) {
@@ -112,12 +141,14 @@ std::vector<std::pair<int, int>> h_and_ne_random;
 std::vector<std::pair<int, int>> h_and_ne_cache;
 std::vector<int> la;
 
+constexpr int kNumKeys = 500000;
+
 void Init() {
-  h_and_ne_random.resize(1000000);
-  h_and_ne_cache.resize(1000000);
-  la.resize(1000000);
+  h_and_ne_random.resize(kNumKeys);
+  h_and_ne_cache.resize(kNumKeys);
+  la.resize(kNumKeys);
   for (int i = 0; i < (int)h_and_ne_random.size(); ++i) {
-    h_and_ne_random[i].first = XorShift96() % 1000000;
+    h_and_ne_random[i].first = XorShift96() % kNumKeys;
   }
   for (int i = 0; i < (int)h_and_ne_cache.size(); ++i) {
     h_and_ne_cache[i].first = i;
@@ -126,8 +157,8 @@ void Init() {
 
 static void BM_CacheRehash(benchmark::State& state) {
   for (auto _ : state) {
-    la.assign(1000000, -1);
-    for (int i = 0; i < 1000000; ++i) {
+    la.assign(kNumKeys, -1);
+    for (int i = 0; i < kNumKeys; ++i) {
       h_and_ne_cache[i].second = la[h_and_ne_cache[i].first];
       la[h_and_ne_cache[i].first] = i;
     }
@@ -137,8 +168,8 @@ BENCHMARK(BM_CacheRehash);
 
 static void BM_RandomRehash(benchmark::State& state) {
   for (auto _ : state) {
-    la.assign(1000000, -1);
-    for (int i = 0; i < 1000000; ++i) {
+    la.assign(kNumKeys, -1);
+    for (int i = 0; i < kNumKeys; ++i) {
       h_and_ne_random[i].second = la[h_and_ne_random[i].first];
       la[h_and_ne_random[i].first] = i;
     }
@@ -148,7 +179,7 @@ BENCHMARK(BM_RandomRehash);
 
 static void BM_RandomAccess(benchmark::State& state) {
   for (auto _ : state) {
-    for (int i = 0; i < 1000000; ++i) {
+    for (int i = 0; i < kNumKeys; ++i) {
       for (int j = la[i]; j >= 0; j = h_and_ne_random[j].second) {
         benchmark::DoNotOptimize(h_and_ne_random[j].first);
       }
@@ -158,7 +189,6 @@ static void BM_RandomAccess(benchmark::State& state) {
 BENCHMARK(BM_RandomAccess);
 
 void InitKeys() {
-  constexpr int kNumKeys = 1000000;
   uLL key = 1;
   for (int i = 0; i < kNumKeys; ++i) {
     keys.push_back(key *= 5);
@@ -168,7 +198,6 @@ void InitKeys() {
 }
 
 void InitKeys_Random() {
-  constexpr int kNumKeys = 1000000;
   for (int i = 0; i < kNumKeys; ++i) {
     keys.push_back(uLL(XorShift96()) << 32 | XorShift96());
   }
@@ -177,7 +206,6 @@ void InitKeys_Random() {
 }
 
 void InitKeys_mt19937() {
-  constexpr int kNumKeys = 1000000;
   std::mt19937 generator;
   for (int i = 0; i < kNumKeys; ++i) {
     keys.push_back(generator());
@@ -186,14 +214,9 @@ void InitKeys_mt19937() {
   std::random_shuffle(keys_shuffled.begin(), keys_shuffled.end());
 }
 
-old_hash_map my_old_hash_map;
-int cnt = 0;
-
 static void BM_MyOldHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    // AutoTimer my_timer("my_timer");
-    cnt++;
-    my_old_hash_map.clear();
+    old_hash_map my_old_hash_map;
     for (const auto key : keys) {
       my_old_hash_map[key] = key;
     }
@@ -213,6 +236,10 @@ BENCHMARK(BM_MyOldHashMap_CacheAccess);
 */
 
 static void BM_MyOldHashMap_RandomAccess(benchmark::State& state) {
+  old_hash_map my_old_hash_map;
+  for (const auto key : keys) {
+    my_old_hash_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       my_old_hash_map[key] = key;
@@ -221,13 +248,9 @@ static void BM_MyOldHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_MyOldHashMap_RandomAccess);
 
-new_hash_map my_new_hash_map;
-
 static void BM_MyNewHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    // AutoTimer my_timer("my_timer");
-    cnt++;
-    my_new_hash_map.clear();
+    new_hash_map my_new_hash_map;
     for (const auto key : keys) {
       my_new_hash_map[key] = key;
     }
@@ -236,6 +259,10 @@ static void BM_MyNewHashMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_MyNewHashMap_ClearAndPush);
 
 static void BM_MyNewHashMap_RandomAccess(benchmark::State& state) {
+  new_hash_map my_new_hash_map;
+  for (const auto key : keys) {
+    my_new_hash_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       my_new_hash_map[key] = key;
@@ -244,13 +271,9 @@ static void BM_MyNewHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_MyNewHashMap_RandomAccess);
 
-VectorHashMap vector_hash_map;
-
 static void BM_VectorHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    // AutoTimer my_timer("my_timer");
-    cnt++;
-    vector_hash_map.clear();
+    VectorHashMap vector_hash_map;
     for (const auto key : keys) {
       vector_hash_map[key] = key;
     }
@@ -259,6 +282,10 @@ static void BM_VectorHashMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_VectorHashMap_ClearAndPush);
 
 static void BM_VectorHashMap_RandomAccess(benchmark::State& state) {
+  VectorHashMap vector_hash_map;
+  for (const auto key : keys) {
+    vector_hash_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       vector_hash_map[key] = key;
@@ -267,13 +294,9 @@ static void BM_VectorHashMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_VectorHashMap_RandomAccess);
 
-HybridHashMap hybrid_hash_map;
-
 static void BM_HybridHashMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    // AutoTimer my_timer("my_timer");
-    cnt++;
-    hybrid_hash_map.clear();
+    HybridHashMap hybrid_hash_map;
     for (const auto key : keys) {
       hybrid_hash_map[key] = key;
     }
@@ -282,6 +305,10 @@ static void BM_HybridHashMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_HybridHashMap_ClearAndPush);
 
 static void BM_HybridHashMap_RandomAccess(benchmark::State& state) {
+  HybridHashMap hybrid_hash_map;
+  for (const auto key : keys) {
+    hybrid_hash_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       hybrid_hash_map[key] = key;
@@ -309,12 +336,9 @@ BENCHMARK(BM_HybridHashMap_RandomAccess);
 // }
 // BENCHMARK(BM_GoogleMap_RandomAccess);
 
-/*
-std::unordered_map<unsigned long long, int> map;
-
 static void BM_StlMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    map.clear();
+    std::unordered_map<unsigned long long, int> map;
     for (const auto key : keys) {
       map[key] = key;
     }
@@ -323,6 +347,10 @@ static void BM_StlMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_StlMap_ClearAndPush);
 
 static void BM_StlMap_RandomAccess(benchmark::State& state) {
+  std::unordered_map<unsigned long long, int> map;
+  for (const auto key : keys) {
+    map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       map[key] = key;
@@ -331,11 +359,9 @@ static void BM_StlMap_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_StlMap_RandomAccess);
 
-tsl::robin_map<unsigned long long, int> tsl_map;
-
 static void BM_TslMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    tsl_map.clear();
+    tsl::robin_map<unsigned long long, int> tsl_map;
     for (const auto key : keys) {
       tsl_map[key] = key;
     }
@@ -344,6 +370,10 @@ static void BM_TslMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_TslMap_ClearAndPush);
 
 static void BM_TslMap_RandomAccess(benchmark::State& state) {
+  tsl::robin_map<unsigned long long, int> tsl_map;
+  for (const auto key : keys) {
+    tsl_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       tsl_map[key] = key;
@@ -351,14 +381,10 @@ static void BM_TslMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_TslMap_RandomAccess);
-*/
-
-/*
-phmap::flat_hash_map<unsigned long long, int> ph_map;
 
 static void BM_PhMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    ph_map.clear();
+    phmap::flat_hash_map<unsigned long long, int> ph_map;
     for (const auto key : keys) {
       ph_map[key] = key;
     }
@@ -367,6 +393,10 @@ static void BM_PhMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_PhMap_ClearAndPush);
 
 static void BM_PhMap_RandomAccess(benchmark::State& state) {
+  phmap::flat_hash_map<unsigned long long, int> ph_map;
+  for (const auto key : keys) {
+    ph_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       ph_map[key] = key;
@@ -374,14 +404,11 @@ static void BM_PhMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_PhMap_RandomAccess);
-*/
 
 /*
-gtl::flat_hash_map<unsigned long long, int> gtl_map;
-
 static void BM_GtlMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    gtl_map.clear();
+    gtl::flat_hash_map<unsigned long long, int> gtl_map;
     for (const auto key : keys) {
       gtl_map[key] = key;
     }
@@ -390,6 +417,10 @@ static void BM_GtlMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_GtlMap_ClearAndPush);
 
 static void BM_GtlMap_RandomAccess(benchmark::State& state) {
+  gtl::flat_hash_map<unsigned long long, int> gtl_map;
+  for (const auto key : keys) {
+    gtl_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       gtl_map[key] = key;
@@ -397,12 +428,11 @@ static void BM_GtlMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_GtlMap_RandomAccess);
-
-spp::sparse_hash_map<unsigned long long, int> spp_map;
+*/
 
 static void BM_SppMap_ClearAndPush(benchmark::State& state) {
   for (auto _ : state) {
-    spp_map.clear();
+    spp::sparse_hash_map<unsigned long long, int> spp_map;
     for (const auto key : keys) {
       spp_map[key] = key;
     }
@@ -411,6 +441,10 @@ static void BM_SppMap_ClearAndPush(benchmark::State& state) {
 BENCHMARK(BM_SppMap_ClearAndPush);
 
 static void BM_SppMap_RandomAccess(benchmark::State& state) {
+  spp::sparse_hash_map<unsigned long long, int> spp_map;
+  for (const auto key : keys) {
+    spp_map[key] = key;
+  }
   for (auto _ : state) {
     for (const auto key : keys_shuffled) {
       spp_map[key] = key;
@@ -418,7 +452,6 @@ static void BM_SppMap_RandomAccess(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_SppMap_RandomAccess);
-*/
 
 int main(int argc, char** argv) {
   Init();
@@ -426,6 +459,5 @@ int main(int argc, char** argv) {
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
-  printf("cnt = %d\n", cnt);
   return 0;
 }

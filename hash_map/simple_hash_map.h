@@ -18,31 +18,31 @@ public:
 
 struct old_hash_map {
   typedef unsigned long long uLL;
-  static constexpr int H = (1 << 21) - 1;
+  static constexpr int H = (1 << 20) - 1;
   // int la[H + 1], top;
   std::vector<int> la;
   int top;
   struct E { uLL key; int da,ne; };
   std::vector<E> e;
   old_hash_map() { clear(); }
-  void clear(){
+  void clear() {
     la.assign(H + 1, -1);
     top=0;
-    e.resize(1e6 + 5);
+    e.resize(5e5 + 5);
   }
   bool count(uLL k) {
     // int i=la[k&H];
-    int i = la[(k * 0xCF1BBCDCBFA53E0B) >> 43];
+    int i = la[(k * 0xCF1BBCDCBFA53E0B) >> 44];
     while (i >= 0 && e[i].key!=k) i=e[i].ne;
     return i >= 0;
   }
   int& operator[] (uLL k) {
     static int h,i;
     // i=la[h=k&H];
-    i = la[h = (k * 0xCF1BBCDCBFA53E0B) >> 43];
+    i = la[h = (k * 0xCF1BBCDCBFA53E0B) >> 44];
     while (i >= 0 && e[i].key!=k) i=e[i].ne;
     if (i < 0) { e[i=top++]=(E){k,0,la[h]}; la[h]=top-1; }
-    assert(top < 1e6 + 5);
+    assert(top < 5e5 + 5);
     return e[i].da;
   }
 };
@@ -59,7 +59,7 @@ class VectorHashMap {
   std::vector<E> e_;
   int num_hash_bits_;
   int num_shift_bits_;
-  static constexpr int kMinNumHashBits = 21;
+  static constexpr int kMinNumHashBits = 10;
 
   void Rehash() {
     // AutoTimer timer_("Rehash");
@@ -85,7 +85,7 @@ public:
   void clear() {
     la_ = std::vector<int>(1 << kMinNumHashBits, -1);
     e_.clear();
-    e_.reserve(1e6 + 5);  // hack
+    e_.reserve(5e5 + 5);  // hack
     num_hash_bits_ = kMinNumHashBits;
     num_shift_bits_ = 64 - num_hash_bits_;
   }
@@ -108,9 +108,9 @@ public:
     }
     e_.emplace_back(E{.key{k}, .value{0}, .ne{la_[h]}});
     la_[h] = e_.size() - 1;
-    // if (__builtin_expect(e_.size() > la_.size() * 0.8, 0)) {
-    //   Rehash();
-    // }
+    if (__builtin_expect(e_.size() > la_.size() * 0.8, 0)) {
+      Rehash();
+    }
     return e_.back().value;
   }
 };
@@ -125,7 +125,7 @@ class HybridHashMap {
   std::vector<E> e_;
   std::vector<int> la_;
 
-  static constexpr int kMinNumHashBits = 21;
+  static constexpr int kMinNumHashBits = 20;
   int num_hash_bits_;
   int num_shift_bits_;
   uLL hash_mask_;
@@ -155,7 +155,7 @@ public:
     if (i >= 0) {
       return e_[i].value;
     }
-    if (la_[h] > 0) {
+    if (la_[h] >= 0) {
       i = la_[h];
     } else {
       i = h;
@@ -171,6 +171,87 @@ public:
   }
 };
 
+class MyHashMapV2 {
+  using uLL = unsigned long long;
+  struct E {
+    uLL key;
+    int value;
+    int ne = -1;
+  };
+  std::vector<E> e_;
+
+  static constexpr int kMinNumHashBits = 10;
+  int num_hash_bits_;
+  int num_shift_bits_;
+
+  void Rehash() {
+    num_hash_bits_++;
+    num_shift_bits_--;
+    std::vector<E> new_e;
+    new_e.reserve((1 << num_hash_bits_) * 1.4);
+    new_e.assign(1 << num_hash_bits_, E{});
+    for (const E& e : e_) {
+      if (e.ne == -1) {
+        continue;
+      }
+      int h = (e.key * 0x9ddfea08eb382d69) >> num_shift_bits_;
+      if (new_e[h].ne == -1) {
+        new_e[h].key = e.key;
+        new_e[h].ne = -2;
+        new_e[h].value = e.value;
+        continue;
+      }
+      new_e.emplace_back(E{.key{e.key}, .value{e.value}, .ne{new_e[h].ne}});
+      new_e[h].ne = new_e.size() - 1;
+    }
+    e_ = std::move(new_e);
+  }
+
+public:
+  MyHashMapV2() { clear(); }
+  void clear() {
+    num_hash_bits_ = kMinNumHashBits;
+    num_shift_bits_ = 64 - kMinNumHashBits;
+    e_.reserve((1 << num_hash_bits_) * 1.4);
+    e_.assign(1 << num_hash_bits_, E{});
+  }
+  bool count(uLL k) {
+    int i = (k * 0x9ddfea08eb382d69) >> num_shift_bits_;
+    if (e_[i].ne == -1) {
+      return false;
+    }
+    while (i >= 0 && e_[i].key != k) {
+      i = e_[i].ne;
+    }
+    return i >= 0;
+  }
+  int& operator[] (uLL k) {
+    int h = (k * 0x9ddfea08eb382d69) >> num_shift_bits_;
+    if (e_[h].ne == -1) {
+      e_[h].key = k;
+      e_[h].ne = -2;
+      return e_[h].value = 0;
+    }
+    int i = h;
+    while (i >= 0 && e_[i].key != k) {
+      i = e_[i].ne;
+    }
+    if (i >= 0) {
+      return e_[i].value;
+    }
+    e_.emplace_back(E{.key{k}, .value{0}, .ne{e_[h].ne}});
+    e_[h].ne = e_.size() - 1;
+    if (__builtin_expect(e_.size() > (1 << num_hash_bits_) * 1.3, 0)) {
+      Rehash();
+      h = (k * 0x9ddfea08eb382d69) >> num_shift_bits_;
+      if (e_[h].ne == -2) {
+        return e_[h].value;
+      }
+    }
+    return e_.back().value;
+  }
+};
+
 class FlatHashMap {
   using uLL = unsigned long long;
   struct Data {
@@ -181,7 +262,7 @@ class FlatHashMap {
   };
   std::vector<Data> data_;
 
-  static constexpr int kMinNumHashBits = 21;
+  static constexpr int kMinNumHashBits = 20;
   int num_hash_bits_;
   int num_shift_bits_;
 
@@ -243,7 +324,7 @@ public:
 
 class new_hash_map {
   using uLL = unsigned long long;
-  static constexpr int H = (1 << 21) - 1;
+  static constexpr int H = (1 << 20) - 1;
   struct Data {
     uLL key;
     int value;
@@ -257,7 +338,7 @@ public:
     data_.assign(H + 1, Data{});
   }
   bool count(uLL k) {
-    int begin = (k * 0x9ddfea08eb382d69) >> 43;
+    int begin = (k * 0x9ddfea08eb382d69) >> 44;
     int length = data_[begin].length;
     for (int i = 0; i < length; ++i) {
       if (data_[(begin + i) & H].key == k) {
@@ -267,7 +348,7 @@ public:
     return false;
   }
   int& operator[] (uLL k) {
-    int begin = (k * 0x9ddfea08eb382d69) >> 43;
+    int begin = (k * 0x9ddfea08eb382d69) >> 44;
     int length = data_[begin].length;
     int t = 0;
     for (; t < length; ++t) {
