@@ -32,14 +32,14 @@ struct old_hash_map {
   }
   bool count(uLL k) {
     // int i=la[k&H];
-    int i = la[(k * 0x9ddfea08eb382d69) >> 43];
+    int i = la[(k * 0xCF1BBCDCBFA53E0B) >> 43];
     while (i >= 0 && e[i].key!=k) i=e[i].ne;
     return i >= 0;
   }
   int& operator[] (uLL k) {
     static int h,i;
     // i=la[h=k&H];
-    i = la[h = (k * 0x9ddfea08eb382d69) >> 43];
+    i = la[h = (k * 0xCF1BBCDCBFA53E0B) >> 43];
     while (i >= 0 && e[i].key!=k) i=e[i].ne;
     if (i < 0) { e[i=top++]=(E){k,0,la[h]}; la[h]=top-1; }
     assert(top < 1e6 + 5);
@@ -168,6 +168,76 @@ public:
     e_[i].ne = la_[h];
     la_[h] = i;
     return e_[i].value;
+  }
+};
+
+class FlatHashMap {
+  using uLL = unsigned long long;
+  struct Data {
+    uLL hash = 0;
+    uLL key = 0;
+    int value = 0;
+    bool valid = false;
+  };
+  std::vector<Data> data_;
+
+  static constexpr int kMinNumHashBits = 21;
+  int num_hash_bits_;
+  int num_shift_bits_;
+
+public:
+  FlatHashMap() { clear(); }
+  void clear() {
+    num_hash_bits_ = kMinNumHashBits;
+    num_shift_bits_ = 64 - num_hash_bits_;
+    data_.assign(1 << (num_hash_bits_ + 1), Data{});
+    data_.shrink_to_fit();
+  }
+  bool count(uLL k) const {
+    uLL hash = k * 0x9ddfea08eb382d69;
+    int t = hash >> num_shift_bits_;
+    while (true) {
+      if (!data_[t].valid) {
+        return false;
+      }
+      if (data_[t].hash > hash) {
+        return false;
+      }
+      if (data_[t].hash == hash && data_[t].key == k) {
+        return true;
+      }
+      t++;
+    }
+  }
+  int& operator[] (uLL k) {
+    uLL hash = k * 0x9ddfea08eb382d69;
+    int t = hash >> num_shift_bits_;
+    while (true) {
+      if (!data_[t].valid) {
+        data_[t].valid = true;
+        data_[t].hash = hash;
+        data_[t].key = k;
+        return data_[t].value = 0;
+      }
+      if (data_[t].hash == hash && data_[t].key == k) {
+        return data_[t].value;
+      }
+      if (data_[t].hash > hash) {
+        int p = t + 1;
+        while (data_[p].valid) {
+          p++;
+        }
+        while (p > t) {
+          data_[p] = data_[p - 1];
+          p--;
+        }
+        data_[t].valid = true;
+        data_[t].hash = hash;
+        data_[t].key = k;
+        return data_[t].value = 0;
+      }
+      t++;
+    }
   }
 };
 

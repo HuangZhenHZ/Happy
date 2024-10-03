@@ -78,6 +78,27 @@ static void BM_Emhash8_RandomAccess(benchmark::State& state) {
 }
 BENCHMARK(BM_Emhash8_RandomAccess);
 
+FlatHashMap my_flat_hash_map;
+
+static void BM_FlatHashMap_ClearAndPush(benchmark::State& state) {
+  for (auto _ : state) {
+    my_flat_hash_map.clear();
+    for (const auto key : keys) {
+      my_flat_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_FlatHashMap_ClearAndPush);
+
+static void BM_FlatHashMap_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (const auto key : keys_shuffled) {
+      my_flat_hash_map[key] = key;
+    }
+  }
+}
+BENCHMARK(BM_FlatHashMap_RandomAccess);
+
 static void BM_CalcHash(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto key : keys) {
@@ -105,6 +126,7 @@ void Init() {
 
 static void BM_CacheRehash(benchmark::State& state) {
   for (auto _ : state) {
+    la.assign(1000000, -1);
     for (int i = 0; i < 1000000; ++i) {
       h_and_ne_cache[i].second = la[h_and_ne_cache[i].first];
       la[h_and_ne_cache[i].first] = i;
@@ -115,6 +137,7 @@ BENCHMARK(BM_CacheRehash);
 
 static void BM_RandomRehash(benchmark::State& state) {
   for (auto _ : state) {
+    la.assign(1000000, -1);
     for (int i = 0; i < 1000000; ++i) {
       h_and_ne_random[i].second = la[h_and_ne_random[i].first];
       la[h_and_ne_random[i].first] = i;
@@ -122,6 +145,17 @@ static void BM_RandomRehash(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_RandomRehash);
+
+static void BM_RandomAccess(benchmark::State& state) {
+  for (auto _ : state) {
+    for (int i = 0; i < 1000000; ++i) {
+      for (int j = la[i]; j >= 0; j = h_and_ne_random[j].second) {
+        benchmark::DoNotOptimize(h_and_ne_random[j].first);
+      }
+    }
+  }
+}
+BENCHMARK(BM_RandomAccess);
 
 void InitKeys() {
   constexpr int kNumKeys = 1000000;
