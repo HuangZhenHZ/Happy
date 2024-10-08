@@ -275,6 +275,19 @@ TEST(Vec2Test, Rotate) {
   EXPECT_NEAR(d.y, c.y, 1e-6);
 }
 
+TEST(MatrixTest, Mul) {
+  Mat4f a;
+  a(0, 0) = 1; a(0, 1) = 2;
+  a(1, 0) = 3; a(1, 1) = 4;
+
+  Mat4f b;
+  b(0, 0) = 1; b(0, 1) = 2;
+  b(1, 0) = 3; b(1, 1) = 4;
+
+  Mat4f c = a * b;
+  EXPECT_NEAR(c(0, 0), 7, 1e-9);
+}
+
 int main(int argc, char **argv) {
   printf("Running main() from %s\n", __FILE__);
   testing::FLAGS_gtest_color = "yes";

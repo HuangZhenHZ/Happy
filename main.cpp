@@ -13,10 +13,6 @@
 #include <cmath>
 #include <memory>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include <GLFW/glfw3.h>
 
 float box_vertices[] = {
@@ -170,7 +166,7 @@ int main() {
   }
   double camera_pitch = 0.0;
   double camera_yaw = 0.0;
-  glm::vec3 camera_pos(0.0, 0.0, -3.0);
+  Vec3f camera_pos(0.0, 0.0, -3.0);
   double fov = 45.0;
   Window::DisableCursor();
   double event_last_time = 0;
@@ -187,16 +183,16 @@ int main() {
     event_last_time = new_time;
     constexpr float kCameraSpeed = 1.0;
     if (Window::GetKey(GLFW_KEY_W) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * glm::vec3(std::sin(camera_yaw), 0.0, std::cos(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(std::sin(camera_yaw), 0.0, std::cos(camera_yaw));
     }
     if (Window::GetKey(GLFW_KEY_S) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * glm::vec3(-std::sin(camera_yaw), 0.0, -std::cos(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::sin(camera_yaw), 0.0, -std::cos(camera_yaw));
     }
     if (Window::GetKey(GLFW_KEY_A) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * glm::vec3(std::cos(camera_yaw), 0.0, -std::sin(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(std::cos(camera_yaw), 0.0, -std::sin(camera_yaw));
     }
     if (Window::GetKey(GLFW_KEY_D) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * glm::vec3(-std::cos(camera_yaw), 0.0, std::sin(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::cos(camera_yaw), 0.0, std::sin(camera_yaw));
     }
 
     Window::CursorPos cursor_pos = Window::GetCursorPos();
@@ -207,17 +203,14 @@ int main() {
     last_cursor_x = cursor_pos.x;
     last_cursor_y = cursor_pos.y;
 
-    glm::mat4 model(1.0f);
-    glm::vec3 camera_dir(std::cos(camera_pitch) * std::sin(camera_yaw),
-                         std::sin(camera_pitch),
-                         std::cos(camera_pitch) * std::cos(camera_yaw));
-    glm::mat4 view = glm::lookAt(camera_pos, camera_pos + camera_dir, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    glm::mat4 projection(1.0f);
-    projection = glm::perspective((float)glm::radians(fov), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
+    Vec3f camera_dir(std::cos(camera_pitch) * std::sin(camera_yaw),
+                     std::sin(camera_pitch),
+                     std::cos(camera_pitch) * std::cos(camera_yaw));
+    Mat4f view = LookAt(camera_pos, camera_pos + camera_dir, Vec3f(0.0f, 1.0f, 0.0f));
+    Mat4f projection = Perspective(fov * (M_PI / 180.0), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
 
     shader3d.Use();
-    shader3d.setMat4f("transform", glm::value_ptr(projection * view * model));
+    shader3d.setMat4f("transform", (view * projection).GetValuePtr());
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBindVertexArray(VAO);
