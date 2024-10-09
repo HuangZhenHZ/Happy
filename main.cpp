@@ -15,59 +15,6 @@
 
 #include <GLFW/glfw3.h>
 
-float box_vertices[] = {
-  -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-  0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-  -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-  0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-  -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-  -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-  -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-  -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-  /*
-  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-  0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-  -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-  */
-
-  -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
-  5.0f, -0.5f, -5.0f,  1.0f, 1.0f,
-  5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
-  5.0f, -0.5f,  5.0f,  1.0f, 0.0f,
-  -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-  -5.0f, -0.5f, -5.0f,  0.0f, 1.0f,
-
-  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-  0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-  0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-  -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-  -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-};
-
 struct UV {
   float u = 0.0, v = 0.0;
 };
@@ -75,7 +22,10 @@ struct UV {
 struct Vertex3d {
   Vec3f pos;
   UV uv;
+  Vec3f normal;
 };
+
+static_assert(sizeof(Vertex3d) == sizeof(float) * 8);
 
 std::vector<Vertex3d> vertices3d;
 
@@ -89,10 +39,42 @@ void AddRect3d(const Vertex3d& v0, const Vertex3d& v1, const Vertex3d& v2, const
 }
 
 void AddBox() {
-  AddRect3d(Vertex3d{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-            Vertex3d{{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
-            Vertex3d{{ 0.5f,  0.5f, -0.5f}, {1.0f, 1.0f}},
-            Vertex3d{{-0.5f,  0.5f, -0.5f}, {0.0f, 1.0f}});
+  const Vec3f e1{.2f, .0f, .0f};
+  const Vec3f e2{.0f, .2f, .0f};
+  const Vec3f e3{.0f, .0f, .2f};
+  const Vec3f e1_normal = e1.Normalized();
+  const Vec3f e2_normal = e2.Normalized();
+  const Vec3f e3_normal = e3.Normalized();
+
+  AddRect3d(Vertex3d{ e3 - e1 - e2, {0.0f, 0.0f}, e3_normal},
+            Vertex3d{ e3 + e1 - e2, {1.0f, 0.0f}, e3_normal},
+            Vertex3d{ e3 + e1 + e2, {1.0f, 1.0f}, e3_normal},
+            Vertex3d{ e3 - e1 + e2, {0.0f, 1.0f}, e3_normal});
+
+  AddRect3d(Vertex3d{-e3 + e1 - e2, {0.0f, 0.0f}, -e3_normal},
+            Vertex3d{-e3 - e1 - e2, {1.0f, 0.0f}, -e3_normal},
+            Vertex3d{-e3 - e1 + e2, {1.0f, 1.0f}, -e3_normal},
+            Vertex3d{-e3 + e1 + e2, {0.0f, 1.0f}, -e3_normal});
+
+  AddRect3d(Vertex3d{ e1 - e2 - e3, {0.0f, 0.0f}, e1_normal},
+            Vertex3d{ e1 + e2 - e3, {1.0f, 0.0f}, e1_normal},
+            Vertex3d{ e1 + e2 + e3, {1.0f, 1.0f}, e1_normal},
+            Vertex3d{ e1 - e2 + e3, {0.0f, 1.0f}, e1_normal});
+
+  AddRect3d(Vertex3d{-e1 + e2 - e3, {0.0f, 0.0f}, -e1_normal},
+            Vertex3d{-e1 - e2 - e3, {1.0f, 0.0f}, -e1_normal},
+            Vertex3d{-e1 - e2 + e3, {1.0f, 1.0f}, -e1_normal},
+            Vertex3d{-e1 + e2 + e3, {0.0f, 1.0f}, -e1_normal});
+
+  AddRect3d(Vertex3d{ e2 + e1 - e3, {0.0f, 0.0f}, e2_normal},
+            Vertex3d{ e2 - e1 - e3, {1.0f, 0.0f}, e2_normal},
+            Vertex3d{ e2 - e1 + e3, {1.0f, 1.0f}, e2_normal},
+            Vertex3d{ e2 + e1 + e3, {0.0f, 1.0f}, e2_normal});
+
+  AddRect3d(Vertex3d{-e2 - e1 - e3, {0.0f, 0.0f}, -e2_normal},
+            Vertex3d{-e2 + e1 - e3, {1.0f, 0.0f}, -e2_normal},
+            Vertex3d{-e2 + e1 + e3, {1.0f, 1.0f}, -e2_normal},
+            Vertex3d{-e2 - e1 + e3, {0.0f, 1.0f}, -e2_normal});
 }
 
 UniqueTexture GetTextureFromFile(const char* filename) {
@@ -130,10 +112,12 @@ int main() {
   GLuint VAO;
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, pos));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, uv));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, normal));
+  glEnableVertexAttribArray(2);
 
   Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
   Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
@@ -166,7 +150,7 @@ int main() {
   }
   double camera_pitch = 0.0;
   double camera_yaw = 0.0;
-  Vec3f camera_pos(0.0, 0.0, -3.0);
+  Vec3f camera_pos(-3.0, 0.0, 0.0);
   double fov = 45.0;
   Window::DisableCursor();
   double event_last_time = 0;
@@ -183,34 +167,41 @@ int main() {
     event_last_time = new_time;
     constexpr float kCameraSpeed = 1.0;
     if (Window::GetKey(GLFW_KEY_W) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * Vec3f(std::sin(camera_yaw), 0.0, std::cos(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(std::cos(camera_yaw), std::sin(camera_yaw), .0f);
     }
     if (Window::GetKey(GLFW_KEY_S) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::sin(camera_yaw), 0.0, -std::cos(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::cos(camera_yaw), -std::sin(camera_yaw), .0f);
     }
     if (Window::GetKey(GLFW_KEY_A) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * Vec3f(std::cos(camera_yaw), 0.0, -std::sin(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::sin(camera_yaw), std::cos(camera_yaw), .0f);
     }
     if (Window::GetKey(GLFW_KEY_D) == GLFW_PRESS) {
-      camera_pos += delta_time * kCameraSpeed * Vec3f(-std::cos(camera_yaw), 0.0, std::sin(camera_yaw));
+      camera_pos += delta_time * kCameraSpeed * Vec3f(std::sin(camera_yaw), -std::cos(camera_yaw), .0f);
+    }
+    if (Window::GetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * Vec3f(0.0, 0.0, 1.0);
+    }
+    if (Window::GetKey(GLFW_KEY_Z) == GLFW_PRESS) {
+      camera_pos += delta_time * kCameraSpeed * Vec3f(0.0, 0.0, -1.0);
     }
 
     Window::CursorPos cursor_pos = Window::GetCursorPos();
     constexpr double kSensitivity = 0.002;
     camera_yaw -= (cursor_pos.x - last_cursor_x) * kSensitivity;
     camera_pitch -= (cursor_pos.y - last_cursor_y) * kSensitivity;
-    camera_pitch = std::clamp(camera_pitch, -M_PI * 0.99, M_PI * 0.99);
+    camera_pitch = std::clamp(camera_pitch, -M_PI * 0.49, M_PI * 0.49);
     last_cursor_x = cursor_pos.x;
     last_cursor_y = cursor_pos.y;
 
-    Vec3f camera_dir(std::cos(camera_pitch) * std::sin(camera_yaw),
-                     std::sin(camera_pitch),
-                     std::cos(camera_pitch) * std::cos(camera_yaw));
-    Mat4f view = LookAt(camera_pos, camera_pos + camera_dir, Vec3f(0.0f, 1.0f, 0.0f));
+    Vec3f camera_dir(std::cos(camera_pitch) * std::cos(camera_yaw),
+                     std::cos(camera_pitch) * std::sin(camera_yaw),
+                     std::sin(camera_pitch));
+    Mat4f view = LookAt(camera_pos, camera_pos + camera_dir, Vec3f(0.0f, 0.0f, 1.0f));
     Mat4f projection = Perspective(fov * (M_PI / 180.0), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
 
     shader3d.Use();
     shader3d.setMat4f("transform", (view * projection).GetValuePtr());
+    shader3d.setVec3f("light_pos", camera_pos.x, camera_pos.y, camera_pos.z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBindVertexArray(VAO);
