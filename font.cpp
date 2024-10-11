@@ -20,7 +20,7 @@ constexpr int cjkend = 0x9FAF;
 double font_x = 100;
 double font_y = 500;
 
-void ProcessFontChar(Vertices* vertices, const stbtt_packedchar& c, double scale) {
+void ProcessFontChar(Vertices2UvRgba* vertices, const stbtt_packedchar& c, double scale) {
   // printf("c %f %f %f %f %f\n", c.xoff, c.yoff, c.xoff2, c.yoff2, c.xadvance);
   vertices->AddRect(font_x + c.xoff * scale, font_y + c.yoff * scale, font_x + c.xoff2 * scale, font_y + c.yoff2 * scale,
                     double(c.x0) / texsz, double(c.y0) / texsz, double(c.x1) / texsz, double(c.y1) / texsz);
@@ -59,7 +59,7 @@ public:
   void Draw(const std::vector<int>& codes, double x, double y) override {
     font_x = x;
     font_y = y;
-    Vertices vertices;
+    Vertices2UvRgba vertices;
     for (const int &code : codes) {
       if (code >= 32 && code < 32 + 96) {
         ProcessFontChar(&vertices, packed_chars1_[code - 32], 1.0);
@@ -111,7 +111,7 @@ public:
     }
     font_x = x;
     font_y = y;
-    Vertices vertices;
+    Vertices2UvRgba vertices;
     for (int i = 0; i < (int)codes.size(); ++i) {
       int code = codes[i];
       if (code == '\n') {

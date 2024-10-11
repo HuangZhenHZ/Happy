@@ -15,68 +15,6 @@
 
 #include <GLFW/glfw3.h>
 
-struct UV {
-  float u = 0.0, v = 0.0;
-};
-
-struct Vertex3d {
-  Vec3f pos;
-  UV uv;
-  Vec3f normal;
-};
-
-static_assert(sizeof(Vertex3d) == sizeof(float) * 8);
-
-std::vector<Vertex3d> vertices3d;
-
-void AddRect3d(const Vertex3d& v0, const Vertex3d& v1, const Vertex3d& v2, const Vertex3d& v3) {
-  vertices3d.push_back(v0);
-  vertices3d.push_back(v1);
-  vertices3d.push_back(v2);
-  vertices3d.push_back(v2);
-  vertices3d.push_back(v3);
-  vertices3d.push_back(v0);
-}
-
-void AddBox() {
-  const Vec3f e1{.2f, .0f, .0f};
-  const Vec3f e2{.0f, .2f, .0f};
-  const Vec3f e3{.0f, .0f, .2f};
-  const Vec3f e1_normal = e1.Normalized();
-  const Vec3f e2_normal = e2.Normalized();
-  const Vec3f e3_normal = e3.Normalized();
-
-  AddRect3d(Vertex3d{ e3 - e1 - e2, {0.0f, 0.0f}, e3_normal},
-            Vertex3d{ e3 + e1 - e2, {1.0f, 0.0f}, e3_normal},
-            Vertex3d{ e3 + e1 + e2, {1.0f, 1.0f}, e3_normal},
-            Vertex3d{ e3 - e1 + e2, {0.0f, 1.0f}, e3_normal});
-
-  AddRect3d(Vertex3d{-e3 + e1 - e2, {0.0f, 0.0f}, -e3_normal},
-            Vertex3d{-e3 - e1 - e2, {1.0f, 0.0f}, -e3_normal},
-            Vertex3d{-e3 - e1 + e2, {1.0f, 1.0f}, -e3_normal},
-            Vertex3d{-e3 + e1 + e2, {0.0f, 1.0f}, -e3_normal});
-
-  AddRect3d(Vertex3d{ e1 - e2 - e3, {0.0f, 0.0f}, e1_normal},
-            Vertex3d{ e1 + e2 - e3, {1.0f, 0.0f}, e1_normal},
-            Vertex3d{ e1 + e2 + e3, {1.0f, 1.0f}, e1_normal},
-            Vertex3d{ e1 - e2 + e3, {0.0f, 1.0f}, e1_normal});
-
-  AddRect3d(Vertex3d{-e1 + e2 - e3, {0.0f, 0.0f}, -e1_normal},
-            Vertex3d{-e1 - e2 - e3, {1.0f, 0.0f}, -e1_normal},
-            Vertex3d{-e1 - e2 + e3, {1.0f, 1.0f}, -e1_normal},
-            Vertex3d{-e1 + e2 + e3, {0.0f, 1.0f}, -e1_normal});
-
-  AddRect3d(Vertex3d{ e2 + e1 - e3, {0.0f, 0.0f}, e2_normal},
-            Vertex3d{ e2 - e1 - e3, {1.0f, 0.0f}, e2_normal},
-            Vertex3d{ e2 - e1 + e3, {1.0f, 1.0f}, e2_normal},
-            Vertex3d{ e2 + e1 + e3, {0.0f, 1.0f}, e2_normal});
-
-  AddRect3d(Vertex3d{-e2 - e1 - e3, {0.0f, 0.0f}, -e2_normal},
-            Vertex3d{-e2 + e1 - e3, {1.0f, 0.0f}, -e2_normal},
-            Vertex3d{-e2 + e1 + e3, {1.0f, 1.0f}, -e2_normal},
-            Vertex3d{-e2 - e1 + e3, {0.0f, 1.0f}, -e2_normal});
-}
-
 UniqueTexture GetTextureFromFile(const char* filename) {
   Image image(filename);
   if (image.data()) {
@@ -101,23 +39,6 @@ int main() {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   InitVAOVBO();
-
-  AddBox();
-
-  GLuint VBO;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, vertices3d.size() * sizeof(Vertex3d), vertices3d.data(), GL_STATIC_DRAW);
-
-  GLuint VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, pos));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, uv));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3d), (void*)offsetof(Vertex3d, normal));
-  glEnableVertexAttribArray(2);
 
   Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
   Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
@@ -154,6 +75,10 @@ int main() {
   double fov = 45.0;
   Window::DisableCursor();
   double event_last_time = 0;
+
+  Vertices3UvNormal vertices3;
+  vertices3.AddBox();
+  vertices3.AddToBuffer();
 
   while (!Window::WindowShouldClose()) {
     glEnable(GL_DEPTH_TEST);
@@ -197,16 +122,14 @@ int main() {
                      std::cos(camera_pitch) * std::sin(camera_yaw),
                      std::sin(camera_pitch));
     Mat4f view = LookAt(camera_pos, camera_pos + camera_dir, Vec3f(0.0f, 0.0f, 1.0f));
-    Mat4f projection = Perspective(fov * (M_PI / 180.0), Window::height() ? 1.0f * Window::width() / Window::height() : 1.0f, 0.1f, 100.0f);
+    Mat4f projection = Perspective(fov * (M_PI / 180.0), ViewPort::size().height ? 1.0f * ViewPort::size().width / ViewPort::size().height : 1.0f, 0.1f, 100.0f);
 
     shader3d.Use();
     shader3d.setMat4f("transform", (view * projection).GetValuePtr());
     shader3d.setVec3f("light_pos", camera_pos.x, camera_pos.y, camera_pos.z);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBindVertexArray(VAO);
     container_tex->Use();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    vertices3.DrawCall();
 
     glDisable(GL_DEPTH_TEST);
 
@@ -228,7 +151,7 @@ int main() {
 
     shader.Use();
     tex->Use();
-    Vertices vertices;
+    Vertices2UvRgba vertices;
     vertices.AddRect(offset, 0, 300 + offset, 300, 0, 0, 1, 1);
     vertices.Draw();
 

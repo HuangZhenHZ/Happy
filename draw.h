@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vec.h"
+
 #include <cstdio>
 #include <vector>
 
@@ -63,7 +65,7 @@ public:
 
 using UniqueTexture = UniqueObj<Texture>;
 
-class Vertices {
+class Vertices2UvRgba {
 public:
   struct Vertex {
     float x = 0.0, y = 0.0;
@@ -90,14 +92,97 @@ public:
     Vertex v1{.x = screen_x2, .y = screen_y1, .u = tex_x2, .v = tex_y1};
     Vertex v2{.x = screen_x2, .y = screen_y2, .u = tex_x2, .v = tex_y2};
     Vertex v3{.x = screen_x1, .y = screen_y2, .u = tex_x1, .v = tex_y2};
+    int sz = vertices_.size();
     vertices_.push_back(v0);
     vertices_.push_back(v1);
     vertices_.push_back(v2);
-    vertices_.push_back(v2);
+    // vertices_.push_back(v2);
     vertices_.push_back(v3);
-    vertices_.push_back(v0);
+    // vertices_.push_back(v0);
+    indices_.push_back(sz + 0);
+    indices_.push_back(sz + 1);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 3);
+    indices_.push_back(sz + 0);
   }
   void Draw() const;
 private:
   std::vector<Vertex> vertices_;
+  std::vector<unsigned int> indices_;
+};
+
+struct UV {
+  float u = 0.0, v = 0.0;
+};
+
+class Vertices3UvNormal {
+public:
+  struct Vertex {
+    Vec3f pos;
+    UV uv;
+    Vec3f normal;
+  };
+
+  void AddRect3d(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Vertex& v3) {
+    int sz = vertices_.size();
+    vertices_.push_back(v0);
+    vertices_.push_back(v1);
+    vertices_.push_back(v2);
+    // vertices_.push_back(v2);
+    vertices_.push_back(v3);
+    // vertices_.push_back(v0);
+    indices_.push_back(sz + 0);
+    indices_.push_back(sz + 1);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 3);
+    indices_.push_back(sz + 0);
+  }
+
+  void AddBox() {
+    const Vec3f e1{.2f, .0f, .0f};
+    const Vec3f e2{.0f, .2f, .0f};
+    const Vec3f e3{.0f, .0f, .2f};
+    const Vec3f e1_normal = e1.Normalized();
+    const Vec3f e2_normal = e2.Normalized();
+    const Vec3f e3_normal = e3.Normalized();
+
+    AddRect3d(Vertex{ e3 - e1 - e2, {0.0f, 0.0f}, e3_normal},
+              Vertex{ e3 + e1 - e2, {1.0f, 0.0f}, e3_normal},
+              Vertex{ e3 + e1 + e2, {1.0f, 1.0f}, e3_normal},
+              Vertex{ e3 - e1 + e2, {0.0f, 1.0f}, e3_normal});
+
+    AddRect3d(Vertex{-e3 + e1 - e2, {0.0f, 0.0f}, -e3_normal},
+              Vertex{-e3 - e1 - e2, {1.0f, 0.0f}, -e3_normal},
+              Vertex{-e3 - e1 + e2, {1.0f, 1.0f}, -e3_normal},
+              Vertex{-e3 + e1 + e2, {0.0f, 1.0f}, -e3_normal});
+
+    AddRect3d(Vertex{ e1 - e2 - e3, {0.0f, 0.0f}, e1_normal},
+              Vertex{ e1 + e2 - e3, {1.0f, 0.0f}, e1_normal},
+              Vertex{ e1 + e2 + e3, {1.0f, 1.0f}, e1_normal},
+              Vertex{ e1 - e2 + e3, {0.0f, 1.0f}, e1_normal});
+
+    AddRect3d(Vertex{-e1 + e2 - e3, {0.0f, 0.0f}, -e1_normal},
+              Vertex{-e1 - e2 - e3, {1.0f, 0.0f}, -e1_normal},
+              Vertex{-e1 - e2 + e3, {1.0f, 1.0f}, -e1_normal},
+              Vertex{-e1 + e2 + e3, {0.0f, 1.0f}, -e1_normal});
+
+    AddRect3d(Vertex{ e2 + e1 - e3, {0.0f, 0.0f}, e2_normal},
+              Vertex{ e2 - e1 - e3, {1.0f, 0.0f}, e2_normal},
+              Vertex{ e2 - e1 + e3, {1.0f, 1.0f}, e2_normal},
+              Vertex{ e2 + e1 + e3, {0.0f, 1.0f}, e2_normal});
+
+    AddRect3d(Vertex{-e2 - e1 - e3, {0.0f, 0.0f}, -e2_normal},
+              Vertex{-e2 + e1 - e3, {1.0f, 0.0f}, -e2_normal},
+              Vertex{-e2 + e1 + e3, {1.0f, 1.0f}, -e2_normal},
+              Vertex{-e2 - e1 + e3, {0.0f, 1.0f}, -e2_normal});
+  }
+
+  void AddToBuffer() const;
+  void DrawCall() const;
+
+private:
+  std::vector<Vertex> vertices_;
+  std::vector<unsigned int> indices_;
 };

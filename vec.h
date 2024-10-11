@@ -3,7 +3,7 @@
 #include <cmath>
 
 // TODO: Optimize this function
-double NormalizeAngle(double x) {
+inline double NormalizeAngle(double x) {
   x = std::fmod(x, 2.0 * M_PI);
   if (x >= M_PI) {
     return x - 2.0 * M_PI;

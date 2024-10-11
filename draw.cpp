@@ -27,25 +27,6 @@ GLenum ChannelsToFormat(int channels) {
 }
 };
 
-namespace {
-GLuint VAO1;
-GLuint VBO1;
-}  // namespace
-
-void InitVAOVBO() {
-  glGenBuffers(1, &VBO1);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
-
-  glGenVertexArrays(1, &VAO1);
-  glBindVertexArray(VAO1);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, x));
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, u));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices::Vertex, r));
-  glEnableVertexAttribArray(2);
-}
-
 Texture::Texture(int width, int height, int channels, const unsigned char *pixels) {
   GLenum format = ChannelsToFormat(channels);
   assert(format);
@@ -76,11 +57,62 @@ void Texture::SubImage(int x, int y, int width, int height, int channels, const 
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, ChannelsToFormat(channels), GL_UNSIGNED_BYTE, pixels);
 }
 
-// glTexSubImage2D(GL_TEXTURE_2D, 0, 200, 20, image2.width(), image2.height(), GL_RGBA, GL_UNSIGNED_BYTE, image2.data());
+namespace {
+GLuint VAO1;
+GLuint VBO1;
+GLuint EBO1;
 
-void Vertices::Draw() const {
-  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+GLuint VAO2;
+GLuint VBO2;
+GLuint EBO2;
+}  // namespace
+
+void InitVAOVBO() {
+  glGenVertexArrays(1, &VAO2);
+  glBindVertexArray(VAO2);
+  glGenBuffers(1, &VBO2);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+  glGenBuffers(1, &EBO2);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices3UvNormal::Vertex), (void*)offsetof(Vertices3UvNormal::Vertex, pos));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertices3UvNormal::Vertex), (void*)offsetof(Vertices3UvNormal::Vertex, uv));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices3UvNormal::Vertex), (void*)offsetof(Vertices3UvNormal::Vertex, normal));
+  glEnableVertexAttribArray(2);
+
+  glGenVertexArrays(1, &VAO1);
   glBindVertexArray(VAO1);
+  glGenBuffers(1, &VBO1);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+  glGenBuffers(1, &EBO1);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO1);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, x));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, u));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, r));
+  glEnableVertexAttribArray(2);
+  // glVertexAttrib4f(2, 1.0, 1.0, 1.0, 1.0);
+}
+
+void Vertices2UvRgba::Draw() const {
+  glBindVertexArray(VAO1);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO1);
   glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
-  glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(indices_[0]), indices_.data(), GL_STREAM_DRAW);
+  // glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
+  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+}
+
+void Vertices3UvNormal::AddToBuffer() const {
+  glBindVertexArray(VAO2);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+  glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(indices_[0]), indices_.data(), GL_STREAM_DRAW);
+}
+
+void Vertices3UvNormal::DrawCall() const {
+  glBindVertexArray(VAO2);
+  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
 }
