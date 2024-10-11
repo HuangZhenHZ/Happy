@@ -42,6 +42,7 @@ int main() {
 
   Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
   Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
+  Shader shader3_rgb = ShaderManager::GetShader("shader3Rgb.vs.glsl", "shader3Rgb.fs.glsl");
   shader3d.Use();
 
   UniqueTexture tex = GetTextureFromFile("awesomeface.png");
@@ -76,8 +77,12 @@ int main() {
   Window::DisableCursor();
   double event_last_time = 0;
 
+  Vertices3Rgb vertices3rgb;
+  vertices3rgb.AddBox(Vec3f{2, 2, 2}, Vec3f{0.2, 0, 0}, Vec3f{0, 0.2, 0}, Vec3f{0, 0, 0.2}, RGB{1, 1, 1});
+  vertices3rgb.AddToBuffer();
+
   Vertices3UvNormal vertices3;
-  vertices3.AddBox();
+  vertices3.AddBox(Vec3f{0, 0, 0}, Vec3f{1, 0, 0}, Vec3f{0, 1, 0}, Vec3f{0, 0, 1});
   vertices3.AddToBuffer();
 
   while (!Window::WindowShouldClose()) {
@@ -126,10 +131,15 @@ int main() {
 
     shader3d.Use();
     shader3d.setMat4f("transform", (view * projection).GetValuePtr());
-    shader3d.setVec3f("light_pos", camera_pos.x, camera_pos.y, camera_pos.z);
+    shader3d.setVec3f("light_pos", 2, 2, 2);
+    shader3d.setVec3f("view_pos", camera_pos.x, camera_pos.y, camera_pos.z);
 
     container_tex->Use();
     vertices3.DrawCall();
+
+    shader3_rgb.Use();
+    shader3_rgb.setMat4f("transform", (view * projection).GetValuePtr());
+    vertices3rgb.DrawCall();
 
     glDisable(GL_DEPTH_TEST);
 

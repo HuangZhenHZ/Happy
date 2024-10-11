@@ -129,9 +129,7 @@ public:
     vertices_.push_back(v0);
     vertices_.push_back(v1);
     vertices_.push_back(v2);
-    // vertices_.push_back(v2);
     vertices_.push_back(v3);
-    // vertices_.push_back(v0);
     indices_.push_back(sz + 0);
     indices_.push_back(sz + 1);
     indices_.push_back(sz + 2);
@@ -140,43 +138,107 @@ public:
     indices_.push_back(sz + 0);
   }
 
-  void AddBox() {
-    const Vec3f e1{.2f, .0f, .0f};
-    const Vec3f e2{.0f, .2f, .0f};
-    const Vec3f e3{.0f, .0f, .2f};
+  void AddBox(const Vec3f center, const Vec3f e1, const Vec3f e2, const Vec3f e3) {
     const Vec3f e1_normal = e1.Normalized();
     const Vec3f e2_normal = e2.Normalized();
     const Vec3f e3_normal = e3.Normalized();
 
-    AddRect3d(Vertex{ e3 - e1 - e2, {0.0f, 0.0f}, e3_normal},
-              Vertex{ e3 + e1 - e2, {1.0f, 0.0f}, e3_normal},
-              Vertex{ e3 + e1 + e2, {1.0f, 1.0f}, e3_normal},
-              Vertex{ e3 - e1 + e2, {0.0f, 1.0f}, e3_normal});
+    AddRect3d(Vertex{center + e3 - e1 - e2, {0.0f, 0.0f}, e3_normal},
+              Vertex{center + e3 + e1 - e2, {1.0f, 0.0f}, e3_normal},
+              Vertex{center + e3 + e1 + e2, {1.0f, 1.0f}, e3_normal},
+              Vertex{center + e3 - e1 + e2, {0.0f, 1.0f}, e3_normal});
 
-    AddRect3d(Vertex{-e3 + e1 - e2, {0.0f, 0.0f}, -e3_normal},
-              Vertex{-e3 - e1 - e2, {1.0f, 0.0f}, -e3_normal},
-              Vertex{-e3 - e1 + e2, {1.0f, 1.0f}, -e3_normal},
-              Vertex{-e3 + e1 + e2, {0.0f, 1.0f}, -e3_normal});
+    AddRect3d(Vertex{center - e3 + e1 - e2, {0.0f, 0.0f}, -e3_normal},
+              Vertex{center - e3 - e1 - e2, {1.0f, 0.0f}, -e3_normal},
+              Vertex{center - e3 - e1 + e2, {1.0f, 1.0f}, -e3_normal},
+              Vertex{center - e3 + e1 + e2, {0.0f, 1.0f}, -e3_normal});
 
-    AddRect3d(Vertex{ e1 - e2 - e3, {0.0f, 0.0f}, e1_normal},
-              Vertex{ e1 + e2 - e3, {1.0f, 0.0f}, e1_normal},
-              Vertex{ e1 + e2 + e3, {1.0f, 1.0f}, e1_normal},
-              Vertex{ e1 - e2 + e3, {0.0f, 1.0f}, e1_normal});
+    AddRect3d(Vertex{center + e1 - e2 - e3, {0.0f, 0.0f}, e1_normal},
+              Vertex{center + e1 + e2 - e3, {1.0f, 0.0f}, e1_normal},
+              Vertex{center + e1 + e2 + e3, {1.0f, 1.0f}, e1_normal},
+              Vertex{center + e1 - e2 + e3, {0.0f, 1.0f}, e1_normal});
 
-    AddRect3d(Vertex{-e1 + e2 - e3, {0.0f, 0.0f}, -e1_normal},
-              Vertex{-e1 - e2 - e3, {1.0f, 0.0f}, -e1_normal},
-              Vertex{-e1 - e2 + e3, {1.0f, 1.0f}, -e1_normal},
-              Vertex{-e1 + e2 + e3, {0.0f, 1.0f}, -e1_normal});
+    AddRect3d(Vertex{center - e1 + e2 - e3, {0.0f, 0.0f}, -e1_normal},
+              Vertex{center - e1 - e2 - e3, {1.0f, 0.0f}, -e1_normal},
+              Vertex{center - e1 - e2 + e3, {1.0f, 1.0f}, -e1_normal},
+              Vertex{center - e1 + e2 + e3, {0.0f, 1.0f}, -e1_normal});
 
-    AddRect3d(Vertex{ e2 + e1 - e3, {0.0f, 0.0f}, e2_normal},
-              Vertex{ e2 - e1 - e3, {1.0f, 0.0f}, e2_normal},
-              Vertex{ e2 - e1 + e3, {1.0f, 1.0f}, e2_normal},
-              Vertex{ e2 + e1 + e3, {0.0f, 1.0f}, e2_normal});
+    AddRect3d(Vertex{center + e2 + e1 - e3, {0.0f, 0.0f}, e2_normal},
+              Vertex{center + e2 - e1 - e3, {1.0f, 0.0f}, e2_normal},
+              Vertex{center + e2 - e1 + e3, {1.0f, 1.0f}, e2_normal},
+              Vertex{center + e2 + e1 + e3, {0.0f, 1.0f}, e2_normal});
 
-    AddRect3d(Vertex{-e2 - e1 - e3, {0.0f, 0.0f}, -e2_normal},
-              Vertex{-e2 + e1 - e3, {1.0f, 0.0f}, -e2_normal},
-              Vertex{-e2 + e1 + e3, {1.0f, 1.0f}, -e2_normal},
-              Vertex{-e2 - e1 + e3, {0.0f, 1.0f}, -e2_normal});
+    AddRect3d(Vertex{center - e2 - e1 - e3, {0.0f, 0.0f}, -e2_normal},
+              Vertex{center - e2 + e1 - e3, {1.0f, 0.0f}, -e2_normal},
+              Vertex{center - e2 + e1 + e3, {1.0f, 1.0f}, -e2_normal},
+              Vertex{center - e2 - e1 + e3, {0.0f, 1.0f}, -e2_normal});
+  }
+
+  void AddToBuffer() const;
+  void DrawCall() const;
+
+private:
+  std::vector<Vertex> vertices_;
+  std::vector<unsigned int> indices_;
+};
+
+struct RGB {
+  float r = 0.0, g = 0.0, b = 0.0;
+};
+
+class Vertices3Rgb {
+public:
+  struct Vertex {
+    Vec3f pos;
+    RGB rgb;
+  };
+
+  void AddRect3d(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Vertex& v3) {
+    int sz = vertices_.size();
+    vertices_.push_back(v0);
+    vertices_.push_back(v1);
+    vertices_.push_back(v2);
+    vertices_.push_back(v3);
+    indices_.push_back(sz + 0);
+    indices_.push_back(sz + 1);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 2);
+    indices_.push_back(sz + 3);
+    indices_.push_back(sz + 0);
+  }
+
+  void AddBox(const Vec3f center, const Vec3f e1, const Vec3f e2, const Vec3f e3, const RGB rgb) {
+    vertices_.clear();
+    indices_.clear();
+    AddRect3d(Vertex{center + e3 - e1 - e2, rgb},
+              Vertex{center + e3 + e1 - e2, rgb},
+              Vertex{center + e3 + e1 + e2, rgb},
+              Vertex{center + e3 - e1 + e2, rgb});
+
+    AddRect3d(Vertex{center - e3 + e1 - e2, rgb},
+              Vertex{center - e3 - e1 - e2, rgb},
+              Vertex{center - e3 - e1 + e2, rgb},
+              Vertex{center - e3 + e1 + e2, rgb});
+
+    AddRect3d(Vertex{center + e1 - e2 - e3, rgb},
+              Vertex{center + e1 + e2 - e3, rgb},
+              Vertex{center + e1 + e2 + e3, rgb},
+              Vertex{center + e1 - e2 + e3, rgb});
+
+    AddRect3d(Vertex{center - e1 + e2 - e3, rgb},
+              Vertex{center - e1 - e2 - e3, rgb},
+              Vertex{center - e1 - e2 + e3, rgb},
+              Vertex{center - e1 + e2 + e3, rgb});
+
+    AddRect3d(Vertex{center + e2 + e1 - e3, rgb},
+              Vertex{center + e2 - e1 - e3, rgb},
+              Vertex{center + e2 - e1 + e3, rgb},
+              Vertex{center + e2 + e1 + e3, rgb});
+
+    AddRect3d(Vertex{center - e2 - e1 - e3, rgb},
+              Vertex{center - e2 + e1 - e3, rgb},
+              Vertex{center - e2 + e1 + e3, rgb},
+              Vertex{center - e2 - e1 + e3, rgb});
   }
 
   void AddToBuffer() const;

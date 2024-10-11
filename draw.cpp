@@ -65,6 +65,10 @@ GLuint EBO1;
 GLuint VAO2;
 GLuint VBO2;
 GLuint EBO2;
+
+GLuint v3_rgb_vao;
+GLuint v3_rgb_vbo;
+GLuint v3_rgb_ebo;
 }  // namespace
 
 void InitVAOVBO() {
@@ -87,13 +91,24 @@ void InitVAOVBO() {
   glBindBuffer(GL_ARRAY_BUFFER, VBO1);
   glGenBuffers(1, &EBO1);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO1);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, x));
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertices2UvRgba::Vertex), (void*)offsetof(Vertices2UvRgba::Vertex, x));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, u));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertices2UvRgba::Vertex), (void*)offsetof(Vertices2UvRgba::Vertex, u));
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)offsetof(Vertices2UvRgba::Vertex, r));
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertices2UvRgba::Vertex), (void*)offsetof(Vertices2UvRgba::Vertex, r));
   glEnableVertexAttribArray(2);
   // glVertexAttrib4f(2, 1.0, 1.0, 1.0, 1.0);
+
+  glGenVertexArrays(1, &v3_rgb_vao);
+  glBindVertexArray(v3_rgb_vao);
+  glGenBuffers(1, &v3_rgb_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, v3_rgb_vbo);
+  glGenBuffers(1, &v3_rgb_ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, v3_rgb_ebo);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices3Rgb::Vertex), (void*)offsetof(Vertices3Rgb::Vertex, pos));
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices3Rgb::Vertex), (void*)offsetof(Vertices3Rgb::Vertex, rgb));
+  glEnableVertexAttribArray(1);
 }
 
 void Vertices2UvRgba::Draw() const {
@@ -114,5 +129,17 @@ void Vertices3UvNormal::AddToBuffer() const {
 
 void Vertices3UvNormal::DrawCall() const {
   glBindVertexArray(VAO2);
+  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+}
+
+void Vertices3Rgb::AddToBuffer() const {
+  glBindVertexArray(v3_rgb_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, v3_rgb_vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(indices_[0]), indices_.data(), GL_STREAM_DRAW);
+}
+
+void Vertices3Rgb::DrawCall() const {
+  glBindVertexArray(v3_rgb_vao);
   glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
 }
