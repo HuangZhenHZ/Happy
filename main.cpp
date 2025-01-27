@@ -34,6 +34,7 @@ int main() {
   }
 
   glEnable(GL_DEPTH_TEST);
+  glEnable(GL_STENCIL_TEST);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -81,6 +82,10 @@ int main() {
   vertices3rgb.AddBox(Vec3f{2, 2, 2}, Vec3f{0.2, 0, 0}, Vec3f{0, 0.2, 0}, Vec3f{0, 0, 0.2}, RGB{1, 1, 1});
   vertices3rgb.AddToBuffer();
 
+  Vertices3Rgb bigger_box;
+  bigger_box.AddBox(Vec3f{0, 0, 0}, Vec3f{1.05, 0, 0}, Vec3f{0, 1.05, 0}, Vec3f{0, 0, 1.05}, RGB{0, 1, 0});
+  bigger_box.AddToBuffer();
+
   Vertices3UvNormal vertices3;
   vertices3.AddBox(Vec3f{0, 0, 0}, Vec3f{1, 0, 0}, Vec3f{0, 1, 0}, Vec3f{0, 0, 1});
   vertices3.AddToBuffer();
@@ -90,7 +95,8 @@ int main() {
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glStencilMask(0xFF);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     double new_time = Window::GetTime();
     float delta_time = new_time - event_last_time;
@@ -129,6 +135,10 @@ int main() {
     Mat4f view = LookAt(camera_pos, camera_pos + camera_dir, Vec3f(0.0f, 0.0f, 1.0f));
     Mat4f projection = Perspective(fov * (M_PI / 180.0), ViewPort::size().height ? 1.0f * ViewPort::size().width / ViewPort::size().height : 1.0f, 0.1f, 100.0f);
 
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+
     shader3d.Use();
     shader3d.setMat4f("transform", (view * projection).GetValuePtr());
     shader3d.setVec3f("light_pos", 2, 2, 2);
@@ -139,9 +149,16 @@ int main() {
 
     shader3_rgb.Use();
     shader3_rgb.setMat4f("transform", (view * projection).GetValuePtr());
+    vertices3rgb.AddToBuffer();
     vertices3rgb.DrawCall();
 
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
+
     glDisable(GL_DEPTH_TEST);
+
+    bigger_box.AddToBuffer();
+    bigger_box.DrawCall();
 
     double offset = new_time * 50;
 
