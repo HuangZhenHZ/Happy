@@ -111,7 +111,7 @@ int main() {
     if (Window::GetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
       camera_pos += delta_time * kCameraSpeed * Vec3f(0.0, 0.0, 1.0);
     }
-    if (Window::GetKey(GLFW_KEY_Z) == GLFW_PRESS) {
+    if (Window::GetKey(GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       camera_pos += delta_time * kCameraSpeed * Vec3f(0.0, 0.0, -1.0);
     }
 
