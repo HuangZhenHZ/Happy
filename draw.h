@@ -65,6 +65,9 @@ public:
   }
   void Use() const;
   void SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels);
+  unsigned int id() const {
+    return id_;
+  }
 };
 
 using UniqueTexture = UniqueObj<Texture>;

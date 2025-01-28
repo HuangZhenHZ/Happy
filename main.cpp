@@ -24,8 +24,11 @@ UniqueTexture GetTextureFromFile(const char* filename) {
   return UniqueTexture{};
 }
 
+constexpr int kWindowWidth = 1920;
+constexpr int kWindowHeight = 1080;
+
 int main() {
-  if (!Window::InitWindow(1920, 1080, "MyGame")) {
+  if (!Window::InitWindow(kWindowWidth, kWindowHeight, "MyGame")) {
     return -1;
   }
   if (!gladLoadGL()) {
@@ -42,6 +45,7 @@ int main() {
   InitVAOVBO();
 
   Shader shader = ShaderManager::GetShader("shader.vs.glsl", "shader.fs.glsl");
+  Shader screen_shader = ShaderManager::GetShader("shader.vs.glsl", "shader.screen.fs.glsl");
   Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
   Shader shader3_rgb = ShaderManager::GetShader("shader3Rgb.vs.glsl", "shader3Rgb.fs.glsl");
   shader3d.Use();
@@ -162,7 +166,27 @@ int main() {
   );
   window.AddToBuffer();
 
+  unsigned int framebuffer;
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+  UniqueTexture texture_color_buffer(kWindowWidth, kWindowHeight, 4, nullptr);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_color_buffer->id(), 0);
+
+  unsigned int rbo;
+  glGenRenderbuffers(1, &rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, kWindowWidth, kWindowHeight);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
   while (!Window::WindowShouldClose()) {
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glEnable(GL_DEPTH_TEST);
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -265,6 +289,16 @@ int main() {
     Vertices2UvRgba vertices;
     vertices.AddRect(offset, 0, 300 + offset, 300, 0, 0, 1, 1);
     vertices.Draw();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    screen_shader.Use();
+    texture_color_buffer->Use();
+    Vertices2UvRgba screen_vertices;
+    screen_vertices.AddRect(0, 0, kWindowWidth, kWindowHeight, 0, 1, 1, 0);
+    screen_vertices.Draw();
 
     Window::SwapScreenBuffer();
     Window::PollInputEvents();
