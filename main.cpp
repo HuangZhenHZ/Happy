@@ -46,14 +46,26 @@ int main() {
   Shader shader3_rgb = ShaderManager::GetShader("shader3Rgb.vs.glsl", "shader3Rgb.fs.glsl");
   shader3d.Use();
 
-  UniqueTexture tex = GetTextureFromFile("awesomeface.png");
-  if (!tex->NotNull()) {
+  UniqueTexture tex = GetTextureFromFile("resources/awesomeface.png");
+  if (tex->Null()) {
     printf("Load texture error\n");
     printf("error: %d\n", glGetError());
   }
 
-  UniqueTexture container_tex = GetTextureFromFile("container.jpg");
-  if (!container_tex->NotNull()) {
+  UniqueTexture container_tex = GetTextureFromFile("resources/container.jpg");
+  if (container_tex->Null()) {
+    printf("Load texture error\n");
+    printf("error: %d\n", glGetError());
+  }
+
+  UniqueTexture grass_texture = GetTextureFromFile("resources/grass.png");
+  if (grass_texture->Null()) {
+    printf("Load texture error\n");
+    printf("error: %d\n", glGetError());
+  }
+
+  UniqueTexture window_texture = GetTextureFromFile("resources/window.png");
+  if (window_texture->Null()) {
     printf("Load texture error\n");
     printf("error: %d\n", glGetError());
   }
@@ -89,6 +101,66 @@ int main() {
   Vertices3UvNormal vertices3;
   vertices3.AddBox(Vec3f{0, 0, 0}, Vec3f{1, 0, 0}, Vec3f{0, 1, 0}, Vec3f{0, 0, 1});
   vertices3.AddToBuffer();
+
+  Vertices3UvNormal grass;
+  grass.AddRect3d(
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 0},
+          .uv = UV{0, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-2, -2, 0},
+          .uv = UV{1, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-2, -2, 1},
+          .uv = UV{1, 0},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 1},
+          .uv = UV{0, 0},
+      }
+  );
+  grass.AddToBuffer();
+
+  Vertices3UvNormal window;
+  window.AddRect3d(
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 0},
+          .uv = UV{0, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -2, 0},
+          .uv = UV{1, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -2, 1},
+          .uv = UV{1, 0},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 1},
+          .uv = UV{0, 0},
+      }
+  );
+  window.AddRect3d(
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 0},
+          .uv = UV{0, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-2, -1, 0},
+          .uv = UV{1, 1},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-2, -1, 1},
+          .uv = UV{1, 0},
+      },
+      Vertices3UvNormal::Vertex{
+          .pos = Vec3f{-1, -1, 1},
+          .uv = UV{0, 0},
+      }
+  );
+  window.AddToBuffer();
 
   while (!Window::WindowShouldClose()) {
     glEnable(GL_DEPTH_TEST);
@@ -145,7 +217,17 @@ int main() {
     shader3d.setVec3f("view_pos", camera_pos.x, camera_pos.y, camera_pos.z);
 
     container_tex->Use();
+    vertices3.AddToBuffer();
     vertices3.DrawCall();
+
+    grass_texture->Use();
+    grass.AddToBuffer();
+    grass.DrawCall();
+
+    window_texture->Use();
+    window.SortFromFarToNear(camera_pos);
+    window.AddToBuffer();
+    window.DrawCall();
 
     shader3_rgb.Use();
     shader3_rgb.setMat4f("transform", (view * projection).GetValuePtr());
@@ -159,6 +241,8 @@ int main() {
 
     bigger_box.AddToBuffer();
     bigger_box.DrawCall();
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
     double offset = new_time * 50;
 
@@ -196,6 +280,8 @@ int main() {
 
   tex.Reset();
   container_tex.Reset();
+  grass_texture.Reset();
+  window_texture.Reset();
   font.reset();
   Window::CloseWindow();
   return 0;

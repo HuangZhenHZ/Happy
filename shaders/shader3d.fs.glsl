@@ -9,8 +9,13 @@ uniform vec3 light_pos;
 uniform vec3 view_pos;
 
 void main() {
+  vec4 texture_color = texture(Texture, Frag_UV);
+  if (texture_color.a < 0.01) {
+    discard;
+  }
+
   vec3 light_color = vec3(1.0, 1.0, 1.0);
-  float kAmbientStrength = 0.1;
+  float kAmbientStrength = 0.5;
   vec3 ambient = kAmbientStrength * light_color;
 
   vec3 norm = normalize(Frag_Normal);
@@ -24,7 +29,5 @@ void main() {
   float kSpecularStrength = 1.0;
   vec3 specular = kSpecularStrength * spec * light_color;
 
-  vec3 object_color = texture(Texture, Frag_UV).rgb;
-  vec3 result = (ambient + diffuse + specular) * object_color;
-  Out_Color += vec4(result, 1.0);
+  Out_Color = vec4((ambient + diffuse + specular) * texture_color.rgb, texture_color.a);
 }

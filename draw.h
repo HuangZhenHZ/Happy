@@ -2,6 +2,7 @@
 
 #include "vec.h"
 
+#include <algorithm>
 #include <cstdio>
 #include <vector>
 
@@ -59,11 +60,19 @@ public:
   bool NotNull() const {
     return id_;
   }
+  bool Null() const {
+    return !bool(id_);
+  }
   void Use() const;
   void SubImage(int x, int y, int width, int height, int channels, const unsigned char *pixels);
 };
 
 using UniqueTexture = UniqueObj<Texture>;
+
+struct TriIndex {
+  unsigned int a, b, c;
+  TriIndex(unsigned int a, unsigned int b, unsigned int c) : a(a), b(b), c(c) {}
+};
 
 class Vertices2UvRgba {
 public:
@@ -99,17 +108,13 @@ public:
     // vertices_.push_back(v2);
     vertices_.push_back(v3);
     // vertices_.push_back(v0);
-    indices_.push_back(sz + 0);
-    indices_.push_back(sz + 1);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 3);
-    indices_.push_back(sz + 0);
+    indices_.emplace_back(sz + 0, sz + 1, sz + 2);
+    indices_.emplace_back(sz + 2, sz + 3, sz + 0);
   }
   void Draw() const;
 private:
   std::vector<Vertex> vertices_;
-  std::vector<unsigned int> indices_;
+  std::vector<TriIndex> indices_;
 };
 
 struct UV {
@@ -130,12 +135,8 @@ public:
     vertices_.push_back(v1);
     vertices_.push_back(v2);
     vertices_.push_back(v3);
-    indices_.push_back(sz + 0);
-    indices_.push_back(sz + 1);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 3);
-    indices_.push_back(sz + 0);
+    indices_.emplace_back(sz + 0, sz + 1, sz + 2);
+    indices_.emplace_back(sz + 2, sz + 3, sz + 0);
   }
 
   void AddBox(const Vec3f center, const Vec3f e1, const Vec3f e2, const Vec3f e3) {
@@ -177,9 +178,20 @@ public:
   void AddToBuffer() const;
   void DrawCall() const;
 
+  void SortFromFarToNear(const Vec3f &pos) {
+    // TODO: optimize and benchmark
+    std::sort(indices_.begin(), indices_.end(),
+        [&](const TriIndex &t1, const TriIndex &t2) {
+          Vec3f p1 = (vertices_[t1.a].pos + vertices_[t1.b].pos + vertices_[t1.c].pos);
+          Vec3f p2 = (vertices_[t2.a].pos + vertices_[t2.b].pos + vertices_[t2.c].pos);
+          return (pos - p1).Length() > (pos - p2).Length();
+        }
+    );
+  }
+
 private:
   std::vector<Vertex> vertices_;
-  std::vector<unsigned int> indices_;
+  std::vector<TriIndex> indices_;
 };
 
 struct RGB {
@@ -199,12 +211,8 @@ public:
     vertices_.push_back(v1);
     vertices_.push_back(v2);
     vertices_.push_back(v3);
-    indices_.push_back(sz + 0);
-    indices_.push_back(sz + 1);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 2);
-    indices_.push_back(sz + 3);
-    indices_.push_back(sz + 0);
+    indices_.emplace_back(sz + 0, sz + 1, sz + 2);
+    indices_.emplace_back(sz + 2, sz + 3, sz + 0);
   }
 
   void AddBox(const Vec3f center, const Vec3f e1, const Vec3f e2, const Vec3f e3, const RGB rgb) {
@@ -246,5 +254,5 @@ public:
 
 private:
   std::vector<Vertex> vertices_;
-  std::vector<unsigned int> indices_;
+  std::vector<TriIndex> indices_;
 };

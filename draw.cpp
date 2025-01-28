@@ -33,8 +33,10 @@ Texture::Texture(int width, int height, int channels, const unsigned char *pixel
   glGenTextures(1, &id_);
   printf("gen texture %d\n", id_);
   glBindTexture(GL_TEXTURE_2D, id_);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
@@ -117,7 +119,7 @@ void Vertices2UvRgba::Draw() const {
   glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(indices_[0]), indices_.data(), GL_STREAM_DRAW);
   // glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
-  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0);
 }
 
 void Vertices3UvNormal::AddToBuffer() const {
@@ -129,7 +131,7 @@ void Vertices3UvNormal::AddToBuffer() const {
 
 void Vertices3UvNormal::DrawCall() const {
   glBindVertexArray(VAO2);
-  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0);
 }
 
 void Vertices3Rgb::AddToBuffer() const {
@@ -141,5 +143,5 @@ void Vertices3Rgb::AddToBuffer() const {
 
 void Vertices3Rgb::DrawCall() const {
   glBindVertexArray(v3_rgb_vao);
-  glDrawElements(GL_TRIANGLES, indices_.size(), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0);
 }
