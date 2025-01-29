@@ -6,7 +6,7 @@
 #include "utf8.h"
 #include "draw.h"
 #include "font.h"
-#include "vec.h"
+#include "math/vec.h"
 
 #include <algorithm>
 #include <iostream>
@@ -316,6 +316,7 @@ int main() {
   container_tex.Reset();
   grass_texture.Reset();
   window_texture.Reset();
+  texture_color_buffer.Reset();
   font.reset();
   Window::CloseWindow();
   return 0;
