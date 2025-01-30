@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec.h"
+#include "segment2d.h"
 
 #include <array>
 
@@ -50,6 +50,8 @@ public:
   FloatType min_y() const { return min_y_; }
   FloatType max_y() const { return max_y_; }
 
+  FloatType area() const { return length_ * width_; }
+
   std::array<VecType, 4> GetCornersArray() const {
     VecType half_length_vec = half_length_ * heading_;
     VecType half_width_vec = half_width_ * heading_.Rotated90();
@@ -59,6 +61,13 @@ public:
       center_ - half_length_vec - half_width_vec,
       center_ + half_length_vec - half_width_vec,
     };
+  }
+
+  FloatType DistanceToPoint(const VecType& point) {
+    const FloatType abs_inner = std::abs(heading_.InnerProd(point - center_));
+    const FloatType abs_cross = std::abs(heading_.CrossProd(point - center_));
+    return ApproxHypot(std::max(abs_inner - half_length_, 0.0),
+                       std::max(abs_cross - half_width_, 0.0));
   }
 };
 

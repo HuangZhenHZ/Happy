@@ -14,6 +14,12 @@ inline double NormalizeAngle(double x) {
   }
 }
 
+template <typename FloatType>
+FloatType ApproxHypot(FloatType x, FloatType y) {
+  static_assert(std::is_floating_point_v<FloatType>);
+  return std::sqrt(x * x + y * y);
+}
+
 template <typename T>
 struct Vec3 {
   static_assert(std::is_floating_point_v<T>);
