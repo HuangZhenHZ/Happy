@@ -40,7 +40,7 @@ TEST(Box2dTest, Basic) {
 
 TEST(Box2dTest, DistanceToPoint) {
   const auto compute_distance = [](const Box2d& box, const Vec2d& point) {
-    std::array<Vec2d, 4> corners = box.GetCornersArray();
+    const std::array<Vec2d, 4> corners = box.GetCornersArray();
     double double_area =
         std::abs((corners[0] - point).CrossProd(corners[1] - point)) +
         std::abs((corners[1] - point).CrossProd(corners[2] - point)) +
@@ -64,6 +64,8 @@ TEST(Box2dTest, DistanceToPoint) {
         double distance = ApproxHypot(double(std::max(-x, 0)), double(std::max(-y, 0)));
         EXPECT_NEAR(box.DistanceToPoint(Vec2d(x, y)), distance, 1e-9);
         EXPECT_NEAR(compute_distance(box, Vec2d(x, y)), distance, 1e-9);
+        EXPECT_NEAR(box.DistanceSqrToPoint(Vec2d(x, y)), distance * distance, 1e-9);
+        EXPECT_EQ(box.IsPointInOrOnBoundary(Vec2d(x, y)), distance == 0);
       }
     }
   }
@@ -74,7 +76,50 @@ TEST(Box2dTest, DistanceToPoint) {
       for (int x = 0; x < 10; ++x) {
         for (int y = 0; y < 10; ++y) {
           Vec2d point(x, y);
-          EXPECT_NEAR(box.DistanceToPoint(point), compute_distance(box, point), 1e-9);
+          double distance = compute_distance(box, point);
+          EXPECT_NEAR(box.DistanceToPoint(point), distance, 1e-9);
+          EXPECT_NEAR(box.DistanceSqrToPoint(point), distance * distance, 1e-9);
+          EXPECT_EQ(box.IsPointInOrOnBoundary(point), distance <= 0);
+        }
+      }
+    }
+  }
+}
+
+TEST(Box2dTest, DistanceToSegment) {
+  const auto compute_distance_sqr = [](const Box2d& box, const Segment2d& segment) {
+    if (box.IsPointInOrOnBoundary(segment.midpoint())) {
+      return 0.0;
+    }
+    const std::array<Vec2d, 4> corners = box.GetCornersArray();
+    if (Segment2d(corners[0], corners[1]).HasIntersectWithSegment(segment) ||
+        Segment2d(corners[1], corners[2]).HasIntersectWithSegment(segment) ||
+        Segment2d(corners[2], corners[3]).HasIntersectWithSegment(segment) ||
+        Segment2d(corners[3], corners[0]).HasIntersectWithSegment(segment)) {
+      return 0.0;
+    }
+    double distance_sqr = std::numeric_limits<double>::infinity();
+    for (const Vec2d& point : corners) {
+      double distance = segment.DistanceToPoint(point);
+      distance_sqr = std::min(distance_sqr, distance * distance);
+    }
+    distance_sqr = std::min(distance_sqr, box.DistanceSqrToPoint(segment.start()));
+    distance_sqr = std::min(distance_sqr, box.DistanceSqrToPoint(segment.end()));
+    return distance_sqr;
+  };
+
+  for (const double cos_heading : {-0.8, 0.8}) {
+    for (const double sin_heading : {-0.6, 0.6}) {
+      Box2d box({1.0, 2.0}, {cos_heading, sin_heading}, 4, 3);
+      for (int x1 = 0; x1 < 10; ++x1) {
+        for (int y1 = 0; y1 < 10; ++y1) {
+          for (int x2 = 0; x2 < 10; ++x2) {
+            for (int y2 = 0; y2 < 10; ++y2) {
+              Segment2d segment(Vec2d(x1, y1), Vec2d(x2, y2));
+              double distance_sqr = compute_distance_sqr(box, segment);
+              EXPECT_NEAR(box.DistanceSqrToSegment(segment), distance_sqr, 1e-9);
+            }
+          }
         }
       }
     }

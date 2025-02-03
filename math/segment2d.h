@@ -13,6 +13,7 @@ public:
 
   const VecType& start() const { return start_; }
   const VecType& end() const { return end_; }
+  VecType midpoint() const { return 0.5 * (start_ + end_); }
   FloatType min_x() const { return std::min(start_.x, end_.x); }
   FloatType max_x() const { return std::max(start_.x, end_.x); }
   FloatType min_y() const { return std::min(start_.y, end_.y); }
@@ -23,7 +24,13 @@ public:
   FloatType Length() const {
     return (end_ - start_).Length();
   }
+  FloatType IsZeroLength() const {
+    return (end_ - start_).LengthSqr() < 1e-18;
+  }
   FloatType DistanceToPoint(const VecType& point) const {
+    if (IsZeroLength()) {
+      return (midpoint() - point).Length();
+    }
     if ((end_ - start_).InnerProd(point - start_) < 0) {
       return (point - start_).Length();
     }
