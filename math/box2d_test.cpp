@@ -38,7 +38,7 @@ TEST(Box2dTest, Basic) {
   }
 }
 
-TEST(Box2dTest, DistanceToPoint) {
+TEST(Box2dTest, RelationToPoint) {
   const auto compute_distance = [](const Box2d& box, const Vec2d& point) {
     const std::array<Vec2d, 4> corners = box.GetCornersArray();
     double double_area =
@@ -86,7 +86,7 @@ TEST(Box2dTest, DistanceToPoint) {
   }
 }
 
-TEST(Box2dTest, DistanceToSegment) {
+TEST(Box2dTest, RelationToSegment) {
   const auto compute_distance_sqr = [](const Box2d& box, const Segment2d& segment) {
     if (box.IsPointInOrOnBoundary(segment.midpoint())) {
       return 0.0;
@@ -118,6 +118,49 @@ TEST(Box2dTest, DistanceToSegment) {
               Segment2d segment(Vec2d(x1, y1), Vec2d(x2, y2));
               double distance_sqr = compute_distance_sqr(box, segment);
               EXPECT_NEAR(box.DistanceSqrToSegment(segment), distance_sqr, 1e-9);
+              EXPECT_NEAR(box.DistanceToSegment(segment), std::sqrt(distance_sqr), 1e-9);
+              EXPECT_EQ(box.HasOverlapWithSegment(segment), distance_sqr < 1e-9);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST(Box2dTest, RelationToBox) {
+  const auto has_overlap_with_box = [](const Box2d& box1, const Box2d& box2) {
+    if (box1.IsPointInOrOnBoundary(box2.center())) {
+      return true;
+    }
+    if (box2.IsPointInOrOnBoundary(box1.center())) {
+      return true;
+    }
+    const std::array<Vec2d, 4> corners = box1.GetCornersArray();
+    if (box2.HasOverlapWithSegment(Segment2d(corners[0], corners[1])) ||
+        box2.HasOverlapWithSegment(Segment2d(corners[1], corners[2])) ||
+        box2.HasOverlapWithSegment(Segment2d(corners[2], corners[3])) ||
+        box2.HasOverlapWithSegment(Segment2d(corners[3], corners[0]))) {
+      return true;
+    }
+    return false;
+  };
+
+  for (const double cos_heading_1 : {-0.8, 0.8}) {
+    for (const double sin_heading_1 : {-0.6, 0.6}) {
+      Box2d box1({1.0, 2.0}, {cos_heading_1, sin_heading_1}, 4, 3);
+      for (const double cos_heading_2 : {-0.8, 0.8}) {
+        for (const double sin_heading_2 : {-0.6, 0.6}) {
+          for (int x2 = 0; x2 < 10; ++x2) {
+            for (int y2 = 0; y2 < 10; ++y2) {
+              for (int length = 0; length < 10; length++) {
+                for (int width = 0; width < 10; width++) {
+                  Box2d box2(Vec2d(x2, y2), {cos_heading_2, sin_heading_2}, length, width);
+                  bool has_overlap = has_overlap_with_box(box1, box2);
+                  EXPECT_EQ(box1.HasOverlapWithBox(box2), has_overlap);
+                  EXPECT_EQ(box2.HasOverlapWithBox(box1), has_overlap);
+                }
+              }
             }
           }
         }

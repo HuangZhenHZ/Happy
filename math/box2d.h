@@ -67,7 +67,7 @@ public:
   bool IsPointInOrOnBoundary(const VecType& point) const {
     const FloatType abs_inner = std::abs(heading_.InnerProd(point - center_));
     const FloatType abs_cross = std::abs(heading_.CrossProd(point - center_));
-    return abs_inner <= half_length_ && abs_cross <= half_width_;
+    return abs_inner <= half_length_ + 1e-9 && abs_cross <= half_width_ + 1e-9;
   }
 
   FloatType DistanceToPoint(const VecType& point) const {
@@ -80,9 +80,26 @@ public:
   FloatType DistanceSqrToPoint(const VecType& point) const {
     const FloatType abs_inner = std::abs(heading_.InnerProd(point - center_));
     const FloatType abs_cross = std::abs(heading_.CrossProd(point - center_));
-    double x = std::max(abs_inner - half_length_, 0.0);
-    double y = std::max(abs_cross - half_width_, 0.0);
+    FloatType x = std::max(abs_inner - half_length_, 0.0);
+    FloatType y = std::max(abs_cross - half_width_, 0.0);
     return x * x + y * y;
+  }
+
+  bool HasOverlapWithSegment(const SegmentType& segment) const {
+    VecType segment_midpoint = segment.midpoint();
+    VecType center_to_midpoint = segment_midpoint - center_;
+    FloatType midpoint_inner_prod = heading_.InnerProd(center_to_midpoint);
+    FloatType midpoint_cross_prod = heading_.CrossProd(center_to_midpoint);
+
+    VecType segment_vec = segment.end() - segment.start();
+    FloatType segment_vec_inner_prod = heading_.InnerProd(segment_vec);
+    FloatType segment_vec_cross_prod = heading_.CrossProd(segment_vec);
+
+    return std::abs(midpoint_inner_prod) * 2 <= std::abs(segment_vec_inner_prod) + length_ + 1e-9 &&
+           std::abs(midpoint_cross_prod) * 2 <= std::abs(segment_vec_cross_prod) + width_ + 1e-9 &&
+        std::abs(segment_vec_inner_prod * midpoint_cross_prod -
+                 segment_vec_cross_prod * midpoint_inner_prod) * 2 <=
+            std::abs(segment_vec_inner_prod) * width_ + std::abs(segment_vec_cross_prod) * length_ + 1e-9;
   }
 
   FloatType DistanceSqrToSegment(const SegmentType& segment) const {
@@ -116,7 +133,7 @@ public:
     FloatType width_cross_prod = segment_vec_inner_prod * half_width_;
     FloatType segment_length_sqr = segment_vec.InnerProd(segment_vec);
 
-    FloatType min_abs_cross_prod = std::numeric_limits<double>::infinity();
+    FloatType min_abs_cross_prod = std::numeric_limits<FloatType>::infinity();
 
     FloatType corner_1_inner_prod = center_inner_prod + length_inner_prod + width_inner_prod;
     if (corner_1_inner_prod > 0.0 && corner_1_inner_prod < segment_length_sqr) {
@@ -146,6 +163,28 @@ public:
     min_distance_sqr = std::min(min_distance_sqr, DistanceSqrToPoint(segment.start()));
     min_distance_sqr = std::min(min_distance_sqr, DistanceSqrToPoint(segment.end()));
     return min_distance_sqr;
+  }
+
+  FloatType DistanceToSegment(const SegmentType& segment) const {
+    return std::sqrt(DistanceSqrToSegment(segment));
+  }
+
+  bool HasOverlapWithBox(const Box2& box) const {
+    const VecType center_diff = box.center() - center_;
+    const FloatType abs_inner_prod = std::abs(heading_.InnerProd(box.heading()));
+    const FloatType abs_cross_prod = std::abs(heading_.CrossProd(box.heading()));
+    return std::abs(heading_.InnerProd(center_diff)) <=
+            half_length_ + abs_inner_prod * box.half_length() +
+                           abs_cross_prod * box.half_width() + 1e-9 &&
+        std::abs(heading_.CrossProd(center_diff)) <=
+            half_width_ + abs_inner_prod * box.half_width() +
+                          abs_cross_prod * box.half_length() + 1e-9 &&
+        std::abs(box.heading().InnerProd(center_diff)) <=
+            box.half_length() + abs_inner_prod * half_length_ +
+                                abs_cross_prod * half_width_ + 1e-9 &&
+        std::abs(box.heading().CrossProd(center_diff)) <=
+            box.half_width() + abs_inner_prod * half_width_ +
+                               abs_cross_prod * half_length_ + 1e-9;
   }
 };
 
