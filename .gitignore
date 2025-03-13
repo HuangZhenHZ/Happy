@@ -3,6 +3,7 @@
 *.o
 *.png
 *.otf
+*.ttf
 *.d
 *.ttc
 *.jpg

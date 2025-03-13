@@ -212,5 +212,6 @@ private:
 
 std::unique_ptr<Font> GetFont() {
   // return std::make_unique<FontV2>("c:/windows/Fonts/msyh.ttc");
-  return std::make_unique<FontV2>("NotoSansSC-Regular.otf");
+  return std::make_unique<FontV2>("resources/NotoSansSC-Regular.otf");
+  // return std::make_unique<FontV2>("resources/LXGWWenKaiMono-Regular.ttf");
 }
