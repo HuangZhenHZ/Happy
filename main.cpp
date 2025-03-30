@@ -170,13 +170,15 @@ int main() {
   glGenFramebuffers(1, &framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-  UniqueTexture texture_color_buffer(kWindowWidth, kWindowHeight, 4, nullptr);
+  UniqueTexture texture_color_buffer(Window::width(), Window::height(), 4, nullptr);
+  int last_framebuffer_width = Window::width();
+  int last_framebuffer_height = Window::height();
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_color_buffer->id(), 0);
 
   unsigned int rbo;
   glGenRenderbuffers(1, &rbo);
   glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, kWindowWidth, kWindowHeight);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Window::width(), Window::height());
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
@@ -189,6 +191,17 @@ int main() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glEnable(GL_DEPTH_TEST);
     ViewPort::SetViewPort(0, 0, Window::width(), Window::height());
+
+    if (Window::width() != last_framebuffer_width || Window::height() != last_framebuffer_height) {
+      texture_color_buffer = UniqueTexture(Window::width(), Window::height(), 4, nullptr);
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_color_buffer->id(), 0);
+      glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Window::width(), Window::height());
+      glBindRenderbuffer(GL_RENDERBUFFER, 0);
+      last_framebuffer_width = Window::width();
+      last_framebuffer_height = Window::height();
+    }
+
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glStencilMask(0xFF);
@@ -298,7 +311,7 @@ int main() {
     screen_shader.Use();
     texture_color_buffer->Use();
     Vertices2UvRgba screen_vertices;
-    screen_vertices.AddRect(0, 0, kWindowWidth, kWindowHeight, 0, 1, 1, 0);
+    screen_vertices.AddRect(0, 0, Window::width(), Window::height(), 0, 1, 1, 0);
     screen_vertices.Draw();
 
     Window::SwapScreenBuffer();
