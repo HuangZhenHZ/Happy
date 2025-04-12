@@ -71,6 +71,9 @@ GLuint EBO2;
 GLuint v3_rgb_vao;
 GLuint v3_rgb_vbo;
 GLuint v3_rgb_ebo;
+
+GLuint v2_rgb_vao;
+GLuint v2_rgb_vbo;
 }  // namespace
 
 void InitVAOVBO() {
@@ -111,6 +114,13 @@ void InitVAOVBO() {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertices3Rgb::Vertex), (void*)offsetof(Vertices3Rgb::Vertex, rgb));
   glEnableVertexAttribArray(1);
+
+  glGenVertexArrays(1, &v2_rgb_vao);
+  glBindVertexArray(v2_rgb_vao);
+  glGenBuffers(1, &v2_rgb_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, v2_rgb_vbo);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2f), 0);
+  glEnableVertexAttribArray(0);
 }
 
 void Vertices2UvRgba::Draw() const {
@@ -144,4 +154,15 @@ void Vertices3Rgb::AddToBuffer() const {
 void Vertices3Rgb::DrawCall() const {
   glBindVertexArray(v3_rgb_vao);
   glDrawElements(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0);
+}
+
+void Vertices2::AddToBuffer() const {
+  glBindVertexArray(v2_rgb_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, v2_rgb_vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vec2f), vertices_.data(), GL_STREAM_DRAW);
+}
+
+void Vertices2::DrawCall() const {
+  glBindVertexArray(v2_rgb_vao);
+  glDrawArrays(GL_POINTS, 0, vertices_.size());
 }

@@ -7,6 +7,7 @@ class Shader {
   unsigned int program_ = 0;
 public:
   explicit Shader(const char* vertex_path, const char* fragment_path);
+  explicit Shader(const char* geo_path, const char* vertex_path, const char* fragment_path);
   void Use() const;
   void setBool(const char* name, bool value) const;
   void setInt(const char* name, int value) const;

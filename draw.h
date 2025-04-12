@@ -259,3 +259,14 @@ private:
   std::vector<Vertex> vertices_;
   std::vector<TriIndex> indices_;
 };
+
+class Vertices2 {
+public:
+  void AddVertex(Vec2f vertex) {
+    vertices_.push_back(vertex);
+  }
+  void AddToBuffer() const;
+  void DrawCall() const;
+private:
+  std::vector<Vec2f> vertices_;
+};

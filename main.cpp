@@ -48,6 +48,7 @@ int main() {
   Shader screen_shader = ShaderManager::GetShader("shader.vs.glsl", "shader.screen.fs.glsl");
   Shader shader3d = ShaderManager::GetShader("shader3d.vs.glsl", "shader3d.fs.glsl");
   Shader shader3_rgb = ShaderManager::GetShader("shader3Rgb.vs.glsl", "shader3Rgb.fs.glsl");
+  Shader shader2d = Shader("shaders/shader2d.geo.glsl", "shaders/shader2d.vert.glsl", "shaders/shader2d.frag.glsl");
   shader3d.Use();
 
   UniqueTexture tex = GetTextureFromFile("resources/awesomeface.png");
@@ -303,6 +304,14 @@ int main() {
     Vertices2UvRgba vertices;
     vertices.AddRect(offset, 0, 300 + offset, 300, 0, 0, 1, 1);
     vertices.Draw();
+
+    shader2d.Use();
+    Vertices2 vertices2;
+    vertices2.AddVertex(Vec2f(-0.5, 0.5));
+    vertices2.AddVertex(Vec2f(0.5, 0.5));
+    vertices2.AddVertex(Vec2f(-0.5, -0.5));
+    vertices2.AddToBuffer();
+    vertices2.DrawCall();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

@@ -46,6 +46,28 @@ Shader::Shader(const char* vertex_path, const char* fragment_path) {
   glDeleteShader(fragment_shader);
 }
 
+Shader::Shader(const char* geo_path, const char* vertex_path, const char* fragment_path) {
+  GLuint geometry_shader = GetShader<GL_GEOMETRY_SHADER>(geo_path);
+  GLuint vertex_shader = GetShader<GL_VERTEX_SHADER>(vertex_path);
+  GLuint fragment_shader = GetShader<GL_FRAGMENT_SHADER>(fragment_path);
+  program_ = glCreateProgram();
+  glAttachShader(program_, geometry_shader);
+  glAttachShader(program_, vertex_shader);
+  glAttachShader(program_, fragment_shader);
+  glLinkProgram(program_);
+  int success;
+  glGetProgramiv(program_, GL_LINK_STATUS, &success);
+  if (!success) {
+    char info_log[512];
+    glGetProgramInfoLog(program_, 512, NULL, info_log);
+    puts("ERROR: Link failed");
+    puts(info_log);
+  }
+  glDeleteShader(geometry_shader);
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+}
+
 void Shader::Use() const {
   glUseProgram(program_);
 }
