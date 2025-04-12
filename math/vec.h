@@ -235,6 +235,24 @@ public:
   const T* GetValuePtr() const {
     return value[0];
   }
+  Matrix operator+ (const Matrix &other) const {
+    Matrix result;
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < M; ++j) {
+        result(i, j) = (*this)(i, j) + other(i, j);
+      }
+    }
+    return result;
+  }
+  Matrix operator- (const Matrix &other) const {
+    Matrix result;
+    for (int i = 0; i < N; ++i) {
+      for (int j = 0; j < M; ++j) {
+        result(i, j) = (*this)(i, j) - other(i, j);
+      }
+    }
+    return result;
+  }
 };
 
 template <typename T, int N, int L, int M>

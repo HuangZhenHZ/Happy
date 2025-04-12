@@ -275,6 +275,42 @@ TEST(Vec2Test, Rotate) {
   EXPECT_NEAR(d.y, c.y, 1e-6);
 }
 
+TEST(MatrixTest, Add) {
+  Matrix<double, 2, 3> a;
+  a(0, 0) = 1; a(0, 1) = 2; a(0, 2) = 3;
+  a(1, 0) = 4; a(1, 1) = 5; a(1, 2) = 6;
+
+  Matrix<double, 2, 3> b;
+  b(0, 0) = 2; b(0, 1) = 3; b(0, 2) = 3;
+  b(1, 0) = 6; b(1, 1) = 6; b(1, 2) = 6;
+
+  Matrix<double, 2, 3> c = a + b;
+  EXPECT_NEAR(c(0, 0), 3, 1e-9);
+  EXPECT_NEAR(c(0, 1), 5, 1e-9);
+  EXPECT_NEAR(c(0, 2), 6, 1e-9);
+  EXPECT_NEAR(c(1, 0), 10, 1e-9);
+  EXPECT_NEAR(c(1, 1), 11, 1e-9);
+  EXPECT_NEAR(c(1, 2), 12, 1e-9);
+}
+
+TEST(MatrixTest, Sub) {
+  Matrix<double, 2, 3> a;
+  a(0, 0) = 1; a(0, 1) = 2; a(0, 2) = 3;
+  a(1, 0) = 4; a(1, 1) = 5; a(1, 2) = 6;
+
+  Matrix<double, 2, 3> b;
+  b(0, 0) = 2; b(0, 1) = 3; b(0, 2) = 3;
+  b(1, 0) = 6; b(1, 1) = 6; b(1, 2) = 6;
+
+  Matrix<double, 2, 3> c = a - b;
+  EXPECT_NEAR(c(0, 0), -1, 1e-9);
+  EXPECT_NEAR(c(0, 1), -1, 1e-9);
+  EXPECT_NEAR(c(0, 2), 0, 1e-9);
+  EXPECT_NEAR(c(1, 0), -2, 1e-9);
+  EXPECT_NEAR(c(1, 1), -1, 1e-9);
+  EXPECT_NEAR(c(1, 2), 0, 1e-9);
+}
+
 TEST(MatrixTest, Mul) {
   Mat4f a;
   a(0, 0) = 1; a(0, 1) = 2;
@@ -286,6 +322,9 @@ TEST(MatrixTest, Mul) {
 
   Mat4f c = a * b;
   EXPECT_NEAR(c(0, 0), 7, 1e-9);
+  EXPECT_NEAR(c(0, 1), 10, 1e-9);
+  EXPECT_NEAR(c(1, 0), 15, 1e-9);
+  EXPECT_NEAR(c(1, 1), 22, 1e-9);
 }
 
 int main(int argc, char **argv) {
