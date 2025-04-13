@@ -260,13 +260,17 @@ private:
   std::vector<TriIndex> indices_;
 };
 
-class Vertices2 {
+class Vertices2Rgb {
 public:
-  void AddVertex(Vec2f vertex) {
+  struct Vertex {
+    Vec2f pos;
+    float r = 0, g = 0, b = 0;
+  };
+  void AddVertex(Vertex vertex) {
     vertices_.push_back(vertex);
   }
   void AddToBuffer() const;
   void DrawCall() const;
 private:
-  std::vector<Vec2f> vertices_;
+  std::vector<Vertex> vertices_;
 };

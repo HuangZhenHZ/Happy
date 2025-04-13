@@ -306,10 +306,15 @@ int main() {
     vertices.Draw();
 
     shader2d.Use();
-    Vertices2 vertices2;
-    vertices2.AddVertex(Vec2f(-0.5, 0.5));
-    vertices2.AddVertex(Vec2f(0.5, 0.5));
-    vertices2.AddVertex(Vec2f(-0.5, -0.5));
+    Vertices2Rgb vertices2;
+    vertices2.AddVertex(Vertices2Rgb::Vertex{
+        .pos = Vec2f(-0.5, 0.5), .r = 1.0, .g = 0.0, .b = 0.0});
+    vertices2.AddVertex(Vertices2Rgb::Vertex{
+        .pos = Vec2f(0.5, 0.5), .r = 0.0, .g = 1.0, .b = 0.0});
+    vertices2.AddVertex(Vertices2Rgb::Vertex{
+        .pos = Vec2f(-0.5, -0.5), .r = 0.0, .g = 0.0, .b = 1.0});
+    vertices2.AddVertex(Vertices2Rgb::Vertex{
+        .pos = Vec2f(0.5, -0.5), .r = 1.0, .g = 1.0, .b = 0.0});
     vertices2.AddToBuffer();
     vertices2.DrawCall();
 
