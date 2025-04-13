@@ -1,4 +1,5 @@
 #include "solver.h"
+#include "my_solver.h"
 
 #include <iostream>
 
@@ -82,15 +83,15 @@ class MyFinalCostFunction : public FinalCostFunction<1> {
 int main() {
   Problem<1, 1> problem;
   problem.set_x0(Problem<1, 1>::VectorX(100.0));
-  Solver<1, 1>::VecOfVectorU output;
+  std::vector<Problem<1, 1>::VectorU> u_traj;
   for (int i = 0; i < 3; ++i) {
     problem.AddTimeStep(std::make_unique<MyCostFunction>(), std::make_unique<MyDynamicModel>());
-    output.emplace_back(-2.0);
+    u_traj.emplace_back(-2.0);
   }
   problem.AddFinalCostFunction(std::make_unique<MyFinalCostFunction>());
-  Solver<1, 1> solver;
-  solver.Solve(problem, &output);
-  for (const auto& vector_u : output) {
+  MySolver<1, 1> solver;
+  solver.Solve(problem, u_traj);
+  for (const auto& vector_u : solver.u()) {
     std::cout << vector_u << std::endl;
   }
   return 0;

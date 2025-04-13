@@ -1,7 +1,5 @@
 #pragma once
 
-#include <numeric>
-
 #include "Eigen/Cholesky"
 #include "Eigen/Core"
 #include "Eigen/LU"
