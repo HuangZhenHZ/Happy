@@ -203,8 +203,8 @@ int main() {
       last_framebuffer_height = Window::height();
     }
 
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glStencilMask(0xFF);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -303,7 +303,7 @@ int main() {
     tex->Use();
     Vertices2UvRgba vertices;
     vertices.AddRect(offset, 0, 300 + offset, 300, 0, 0, 1, 1);
-    vertices.Draw();
+    vertices.Draw(3);
 
     shader2d.Use();
     Vertices2Rgb vertices2;

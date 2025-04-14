@@ -104,6 +104,19 @@ void InitVAOVBO() {
   glEnableVertexAttribArray(2);
   // glVertexAttrib4f(2, 1.0, 1.0, 1.0, 1.0);
 
+  unsigned int instanceVBO;
+  glGenBuffers(1, &instanceVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+  Vec2f translations[10];
+  for (int i = 0; i < 10; ++i) {
+    translations[i].x = i * 0.1;
+    translations[i].y = -i * 0.1;
+  }
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Vec2f) * 10, &translations[0], GL_STATIC_DRAW);
+  glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2f), (void*)0);
+  glEnableVertexAttribArray(3);
+  glVertexAttribDivisor(3, 1);
+
   glGenVertexArrays(1, &v3_rgb_vao);
   glBindVertexArray(v3_rgb_vao);
   glGenBuffers(1, &v3_rgb_vbo);
@@ -125,13 +138,13 @@ void InitVAOVBO() {
   glEnableVertexAttribArray(1);
 }
 
-void Vertices2UvRgba::Draw() const {
+void Vertices2UvRgba::Draw(int num_instance) const {
   glBindVertexArray(VAO1);
   glBindBuffer(GL_ARRAY_BUFFER, VBO1);
   glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), vertices_.data(), GL_STREAM_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(indices_[0]), indices_.data(), GL_STREAM_DRAW);
   // glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
-  glDrawElements(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0);
+  glDrawElementsInstanced(GL_TRIANGLES, indices_.size() * 3, GL_UNSIGNED_INT, 0, num_instance);
 }
 
 void Vertices3UvNormal::AddToBuffer() const {

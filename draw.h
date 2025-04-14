@@ -114,7 +114,7 @@ public:
     indices_.emplace_back(sz + 0, sz + 1, sz + 2);
     indices_.emplace_back(sz + 2, sz + 3, sz + 0);
   }
-  void Draw() const;
+  void Draw(int num_instance = 1) const;
 private:
   std::vector<Vertex> vertices_;
   std::vector<TriIndex> indices_;
