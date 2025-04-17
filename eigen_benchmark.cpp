@@ -1,6 +1,6 @@
 #include "benchmark/benchmark.h"
 #include "Eigen/Core"
-#include "math/vec.h"
+#include "experiment/vec.h"
 
 constexpr int kArrayLength = 100;
 static void BM_EigenArray(benchmark::State& state) {
@@ -172,6 +172,7 @@ static void BM_ManualMatrix(benchmark::State& state) {
 }
 BENCHMARK(BM_ManualMatrix);
 
+/*
 static void BM_MyMatrix(benchmark::State& state) {
   std::vector<Matrix<double, 2, 1>> points(kNumPoints);
   for (int i = 0; i < kNumPoints; ++i) {
@@ -243,6 +244,7 @@ static void BM_MyMatrix4x4(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_MyMatrix4x4);
+*/
 
 constexpr int kNumVec2d = 100;
 static void BM_EigenVector2d(benchmark::State& state) {
@@ -272,9 +274,9 @@ static void BM_MyVec2d(benchmark::State& state) {
     for (int i = 0; i + 1 < kNumVec2d; ++i) {
       Vec2d c = vecs[i] + vecs[i + 1];
       benchmark::DoNotOptimize(c);
-      double dot_result = vecs[i].InnerProd(vecs[i + 1]);
+      double dot_result = InnerProd(vecs[i], vecs[i + 1]);
       benchmark::DoNotOptimize(dot_result);
-      double cross_result = vecs[i].CrossProd(vecs[i + 1]);
+      double cross_result = CrossProd(vecs[i], vecs[i + 1]);
       benchmark::DoNotOptimize(cross_result);
     }
   }
